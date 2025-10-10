@@ -133,6 +133,36 @@ class SurveyController extends Controller
     }
 
     /**
+     * Simple completion of survey (simplified process)
+     */
+    public function completeSimple(Request $request, Survey $survey)
+    {
+        // Verificar que el usuario puede completar esta encuesta
+        if ($survey->user_id !== Auth::id() || $survey->isCompleted()) {
+            abort(403, 'No puedes completar esta encuesta.');
+        }
+
+        $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comments' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $survey->update([
+                'rating' => $request->rating,
+                'comments' => $request->comments,
+                'completed_at' => now(),
+            ]);
+
+            return redirect()->route('tickets.show', $survey->ticket_id)
+                ->with('success', '¡Gracias por tu calificación!');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Error al completar la encuesta: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Quick completion of survey with 5 stars
      */
     public function quickComplete(Request $request, Survey $survey)

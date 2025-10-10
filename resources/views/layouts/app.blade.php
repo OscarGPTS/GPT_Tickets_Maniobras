@@ -53,10 +53,6 @@
                                        class="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 {{ request()->routeIs('tickets.*') ? 'bg-indigo-700' : '' }}">
                                         Mis Tickets
                                     </a>
-                                    <a href="{{ route('surveys.index') }}" 
-                                       class="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 {{ request()->routeIs('surveys.*') ? 'bg-indigo-700' : '' }}">
-                                        Encuestas
-                                    </a>
                                     @if(auth()->user()->roles()->where('name', 'almacen')->exists())
                                         <a href="{{ route('almacen.dashboard') }}" 
                                            class="rounded-md px-3 py-2 text-sm font-medium text-white hover:bg-indigo-500 {{ request()->routeIs('almacen.*') ? 'bg-indigo-700' : '' }}">

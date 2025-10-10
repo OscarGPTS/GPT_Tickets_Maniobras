@@ -227,7 +227,32 @@
                             <p class="text-xs text-gray-500">Completada el {{ $ticket->survey->completed_at->format('d/m/Y H:i') }}</p>
                         </div>
                     @else
-                        <p class="text-sm text-gray-500">Pendiente de completar</p>
+                        <form method="POST" action="{{ route('surveys.complete', $ticket->survey) }}" class="space-y-3">
+                            @csrf
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Califica tu experiencia (1-5 estrellas):</label>
+                                <div class="flex space-x-1 mt-1">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <button type="button" onclick="setRating({{ $i }})" class="rating-star text-gray-300 hover:text-yellow-400 transition-colors">
+                                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+                                            </svg>
+                                        </button>
+                                    @endfor
+                                    <input type="hidden" name="rating" id="rating-input" value="" required>
+                                </div>
+                                <span id="rating-text" class="text-sm text-gray-500"></span>
+                            </div>
+                            
+                            <div>
+                                <label for="comments" class="text-sm font-medium text-gray-700">Comentarios (opcional):</label>
+                                <textarea name="comments" id="comments" rows="2" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Comparte tu experiencia..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                Enviar Encuesta
+                            </button>
+                        </form>
                     @endif
                 </div>
             </div>
@@ -731,6 +756,31 @@ document.addEventListener('DOMContentLoaded', function() {
             closeImageModal();
         }
     });
+    
+    // Funcionalidad para la calificación con estrellas
+    function setRating(rating) {
+        const ratingInput = document.getElementById('rating-input');
+        const ratingText = document.getElementById('rating-text');
+        const stars = document.querySelectorAll('.rating-star');
+        
+        // Actualizar el input hidden
+        ratingInput.value = rating;
+        
+        // Actualizar las estrellas visualmente
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('text-gray-300');
+                star.classList.add('text-yellow-400');
+            } else {
+                star.classList.remove('text-yellow-400');
+                star.classList.add('text-gray-300');
+            }
+        });
+        
+        // Actualizar el texto de la calificación
+        const ratingLabels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+        ratingText.textContent = ratingLabels[rating];
+    }
 });
 </script>
 @endsection

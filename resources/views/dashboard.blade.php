@@ -119,7 +119,7 @@
                     </div>
                     <div class="mt-4">
                         <div class="-mx-2 -my-1.5 flex">
-                            <a href="{{ route('surveys.pending') }}" 
+                            <a href="{{ route('tickets.index', ['filter' => 'survey_pending']) }}" 
                                class="rounded-md bg-yellow-50 px-2 py-1.5 text-sm font-medium text-yellow-800 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-yellow-600 focus:ring-offset-2 focus:ring-offset-yellow-50">
                                 Completar Encuestas
                             </a>

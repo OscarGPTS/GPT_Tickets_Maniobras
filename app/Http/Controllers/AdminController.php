@@ -38,17 +38,30 @@ class AdminController extends Controller
     {
         $this->checkAdminPermission();
 
-        // Estadísticas generales
+        // Estadísticas generales actualizadas
         $stats = [
             'total_users' => User::count(),
             'total_tickets' => Ticket::count(),
             'pending_tickets' => Ticket::where('status', 'pendiente')->count(),
-            'completed_tickets' => Ticket::where('status', 'completado')->count(),
+            'in_progress_tickets' => Ticket::where('status', 'en_progreso')->count(),
+            'completed_tickets' => Ticket::where('status', 'finalizado')->count(),
             'total_surveys' => Survey::count(),
             'completed_surveys' => Survey::whereNotNull('completed_at')->count(),
             'pending_surveys' => Survey::whereNull('completed_at')->count(),
-            'average_rating' => Survey::whereNotNull('completed_at')->avg('rating') ?? 0,
+            'average_rating' => round(Survey::whereNotNull('completed_at')->avg('rating') ?? 0, 1),
         ];
+
+        // Porcentaje de satisfacción general
+        $completedSurveys = Survey::whereNotNull('completed_at')->get();
+        $totalCompletedSurveys = $completedSurveys->count();
+        
+        if ($totalCompletedSurveys > 0) {
+            // Consideramos satisfactorio si la calificación es 4 o 5
+            $satisfiedSurveys = $completedSurveys->where('rating', '>=', 4)->count();
+            $stats['satisfaction_percentage'] = round(($satisfiedSurveys / $totalCompletedSurveys) * 100, 1);
+        } else {
+            $stats['satisfaction_percentage'] = 0;
+        }
 
         // Usuarios por rol
         $usersByRole = [
@@ -57,14 +70,49 @@ class AdminController extends Controller
             'solicitante' => User::role('solicitante')->count(),
         ];
 
+        // Estadísticas por miembro de almacén
+        $almacenMembers = User::role('almacen')->get();
+        $almacenStats = [];
+        
+        foreach ($almacenMembers as $member) {
+            $memberTickets = Ticket::where('assigned_to', $member->id)->where('status', 'finalizado')->get();
+            $memberSurveys = Survey::whereIn('ticket_id', $memberTickets->pluck('id'))
+                                  ->whereNotNull('completed_at')
+                                  ->get();
+            
+            $totalSurveys = $memberSurveys->count();
+            $avgRating = $totalSurveys > 0 ? round($memberSurveys->avg('rating') ?? 0, 1) : 0;
+            $satisfiedCount = $memberSurveys->where('rating', '>=', 4)->count();
+            $satisfactionPercentage = $totalSurveys > 0 ? round(($satisfiedCount / $totalSurveys) * 100, 1) : 0;
+            
+            $almacenStats[] = [
+                'id' => $member->id,
+                'name' => $member->name,
+                'email' => $member->email,
+                'total_tickets' => Ticket::where('assigned_to', $member->id)->count(),
+                'completed_tickets' => $memberTickets->count(),
+                'total_surveys' => $totalSurveys,
+                'average_rating' => $avgRating,
+                'satisfaction_percentage' => $satisfactionPercentage,
+            ];
+        }
+
+        // Ordenar por porcentaje de satisfacción descendente
+        $almacenStats = collect($almacenStats)->sortByDesc('satisfaction_percentage')->values()->all();
+
         // Actividad reciente
-        $recentUsers = User::orderBy('created_at', 'desc')->take(5)->get();
+        $recentUsers = User::with('roles')->orderBy('created_at', 'desc')->take(5)->get();
         $recentTickets = Ticket::with(['user', 'assignedTo'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'usersByRole', 'recentUsers', 'recentTickets'));
+        // Tickets paginados (ordenados del más actual primero)
+        $allTickets = Ticket::with(['user', 'assignedTo', 'survey'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+
+        return view('admin.dashboard', compact('stats', 'usersByRole', 'recentUsers', 'recentTickets', 'allTickets', 'almacenStats'));
     }
 
     /**

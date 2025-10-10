@@ -46,6 +46,7 @@ Route::middleware(['auth'])->group(function () {
     // Encuestas
     Route::resource('surveys', SurveyController::class)->except(['create', 'store', 'destroy']);
     Route::get('/surveys/pending', [SurveyController::class, 'pending'])->name('surveys.pending');
+    Route::post('/surveys/{survey}/complete', [SurveyController::class, 'completeSimple'])->name('surveys.complete');
     Route::post('/surveys/{survey}/quick-complete', [SurveyController::class, 'quickComplete'])->name('surveys.quickComplete');
     Route::post('/surveys/quick-complete-all', [SurveyController::class, 'quickCompleteAll'])->name('surveys.quickCompleteAll');
     

@@ -36,13 +36,7 @@
                         </a>
                     @endif
                     
-                    @if($ticket->status === 'finalizado' && $ticket->survey && !$ticket->survey->completed_at)
-                        <a href="{{ route('surveys.show', $ticket->survey) }}" 
-                           class="inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white hover:bg-yellow-700">
-                            <i class="fas fa-star mr-1"></i>
-                            Calificar Servicio
-                        </a>
-                    @endif
+               
                 </div>
             </div>
         </div>
@@ -114,6 +108,41 @@
                                 </div>
                             </div>
                         @endif
+                    </div>
+                @endif
+
+                <!-- Formulario de Encuesta Simplificado -->
+                @if($ticket->status === 'finalizado' && $ticket->survey && !$ticket->survey->completed_at)
+                    <div id="survey-form" class="bg-white shadow rounded-lg p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Califica tu Experiencia</h2>
+                        <form method="POST" action="{{ route('surveys.complete', $ticket->survey) }}" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label class="text-sm font-medium text-gray-700">Calificación (1-5 estrellas):</label>
+                                <div class="flex space-x-1 mt-2">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <button type="button" onclick="setRating({{ $i }})" class="rating-star text-gray-300 hover:text-yellow-400 transition-colors">
+                                            <i class="fas fa-star text-xl"></i>
+                                        </button>
+                                    @endfor
+                                    <input type="hidden" name="rating" id="rating-input" value="" required>
+                                </div>
+                                <span id="rating-text" class="text-sm text-gray-500 mt-1 block"></span>
+                            </div>
+                            
+                            <div>
+                                <label for="comments" class="text-sm font-medium text-gray-700">Comentarios (opcional):</label>
+                                <textarea name="comments" id="comments" rows="3" 
+                                         class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                                         placeholder="Comparte tu experiencia..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
+                                    Enviar Calificación
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 @endif
 
@@ -193,7 +222,7 @@
                 <div class="bg-white shadow rounded-lg p-6">
                     <h2 class="text-lg font-medium text-gray-900 mb-4">Historial</h2>
                     <div class="flow-root">
-                        <ul class="-mb-8">
+                        <ul class="mb-4">
                             <li>
                                 <div class="relative pb-8">
                                     <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
@@ -309,6 +338,32 @@ document.addEventListener('keydown', function(e) {
         closeImageModal();
     }
 });
+
+// Función para calificación con estrellas
+function setRating(rating) {
+    const ratingInput = document.getElementById('rating-input');
+    const ratingText = document.getElementById('rating-text');
+    const stars = document.querySelectorAll('.rating-star');
+    
+    // Actualizar el input hidden
+    ratingInput.value = rating;
+    
+    // Actualizar las estrellas visualmente
+    stars.forEach((star, index) => {
+        const icon = star.querySelector('i');
+        if (index < rating) {
+            icon.classList.remove('text-gray-300');
+            icon.classList.add('text-yellow-400');
+        } else {
+            icon.classList.remove('text-yellow-400');
+            icon.classList.add('text-gray-300');
+        }
+    });
+    
+    // Actualizar el texto de la calificación
+    const ratingLabels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+    ratingText.textContent = ratingLabels[rating];
+}
 </script>
 @endpush
 @endsection

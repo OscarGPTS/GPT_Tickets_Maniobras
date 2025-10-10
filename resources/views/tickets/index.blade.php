@@ -30,9 +30,9 @@
                                 Tienes encuestas pendientes. Completa tus encuestas para crear nuevos tickets.
                             </p>
                             <div class="mt-2">
-                                <a href="{{ route('surveys.pending') }}" 
+                                <a href="{{ route('tickets.index', ['filter' => 'survey_pending']) }}" 
                                    class="text-sm font-medium text-yellow-800 underline hover:text-yellow-900">
-                                    Ver encuestas pendientes
+                                    Ver tickets con encuestas pendientes
                                 </a>
                             </div>
                         </div>
@@ -144,7 +144,7 @@
                                     @endif
 
                                     @if($ticket->status === 'finalizado' && $ticket->survey && !$ticket->survey->completed_at)
-                                        <a href="{{ route('surveys.show', $ticket->survey) }}" 
+                                        <a href="{{ route('tickets.show', $ticket) }}" 
                                            class="inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
                                             <i class="fas fa-star mr-1"></i>
                                             Calificar
