@@ -69,8 +69,7 @@ Route::middleware(['auth', 'role:almacen'])->prefix('almacen')->name('almacen.')
     
     // Asignación y completado de tickets
     Route::post('/tickets/{ticket}/assign', [AlmacenController::class, 'assignTicket'])->name('tickets.assign');
-    Route::post('/tickets/{ticket}/add-progress', [AlmacenController::class, 'addProgress'])->name('tickets.add-progress');
-    Route::get('/tickets/{ticket}/complete', [AlmacenController::class, 'completeForm'])->name('tickets.complete.form');
+    Route::post('/tickets/{ticket}/progress', [AlmacenController::class, 'addProgress'])->name('tickets.progress');
     Route::post('/tickets/{ticket}/complete', [AlmacenController::class, 'completeTicket'])->name('tickets.complete');
     
     // Estadísticas

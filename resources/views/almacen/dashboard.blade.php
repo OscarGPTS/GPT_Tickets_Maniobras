@@ -200,7 +200,7 @@
                                         <a href="{{ route('almacen.tickets.show', $ticket) }}" 
                                            class="text-blue-600 hover:text-blue-700 text-xs">Ver</a>
                                         @if($ticket->status !== 'completado')
-                                            <a href="{{ route('almacen.tickets.complete.form', $ticket) }}" 
+                                            <a href="{{ route('almacen.tickets.show', $ticket) }}" 
                                                class="text-green-600 hover:text-green-700 text-xs">Completar</a>
                                         @endif
                                     </div>

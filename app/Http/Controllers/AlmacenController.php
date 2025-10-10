@@ -75,13 +75,13 @@ class AlmacenController extends Controller
     }
 
     /**
-     * Ver detalle de un ticket específico
+     * Ver detalle de un ticket específico (vista unificada)
      */
     public function showTicket(Ticket $ticket)
     {
         $ticket->load(['user', 'assignedTo', 'images', 'survey']);
 
-        return view('almacen.ticket-detail', compact('ticket'));
+        return view('almacen.ticket', compact('ticket'));
     }
 
     /**
@@ -108,19 +108,6 @@ class AlmacenController extends Controller
     }
 
     /**
-     * Mostrar formulario para completar ticket
-     */
-    public function completeForm(Ticket $ticket)
-    {
-        // Verificar que es el ticket asignado al usuario actual
-        if ($ticket->assigned_to !== Auth::id() || !$ticket->isEnProceso()) {
-            abort(403, 'No puedes completar este ticket.');
-        }
-
-        return view('almacen.complete-ticket', compact('ticket'));
-    }
-
-    /**
      * Agregar progreso a un ticket
      */
     public function addProgress(Request $request, Ticket $ticket)
@@ -131,60 +118,30 @@ class AlmacenController extends Controller
         }
 
         $request->validate([
-            'progress_comment' => 'nullable|string|max:1000',
-            'ticket_status' => 'required|in:en_progreso,esperando_recursos,esperando_aprobacion,completado',
+            'progress_comment' => 'required|string|max:1000',
             'progress_images' => 'nullable|array|max:3',
             'progress_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         DB::beginTransaction();
         try {
-            // Si el estado es completado, redirigir al formulario de completar
-            if ($request->ticket_status === 'completado') {
-                return redirect()->route('almacen.tickets.complete.form', $ticket)
-                    ->with('info', 'Para marcar como completado, debes proporcionar evidencia del trabajo realizado.');
-            }
-
-            // Actualizar estado del ticket si cambió
-            if ($ticket->status !== $request->ticket_status) {
-                $ticket->update(['status' => $request->ticket_status]);
-            }
-
-            // Agregar comentario de progreso si existe
-            if ($request->filled('progress_comment')) {
-                // Crear un comentario en la tabla de imágenes con tipo 'progreso'
-                TicketImage::create([
-                    'ticket_id' => $ticket->id,
-                    'uploaded_by' => Auth::id(),
-                    'file_path' => null, // Sin archivo, solo comentario
-                    'original_name' => 'Comentario de Progreso',
-                    'mime_type' => 'text/plain',
-                    'file_size' => 0,
-                    'type' => 'progreso',
-                    'description' => $request->progress_comment,
-                    'created_at' => now(),
-                ]);
-            }
-
-            // Procesar imágenes de progreso si las hay
+            // Subir imágenes de progreso si hay
             if ($request->hasFile('progress_images')) {
                 foreach ($request->file('progress_images') as $image) {
-                    $path = $image->store('tickets/' . $ticket->id . '/progress', 'public');
+                    $path = $image->store('tickets/progress', 'public');
                     
-                    TicketImage::create([
-                        'ticket_id' => $ticket->id,
-                        'uploaded_by' => Auth::id(),
+                    $ticket->images()->create([
                         'file_path' => $path,
                         'original_name' => $image->getClientOriginalName(),
-                        'mime_type' => $image->getMimeType(),
-                        'file_size' => $image->getSize(),
-                        'type' => 'progreso',
+                        'type' => 'progreso'
                     ]);
                 }
             }
 
-            // Notificar al usuario solicitante sobre el progreso
-            $ticket->user->notify(new \App\Notifications\TicketProgress($ticket, $request->progress_comment));
+            // Actualizar estado a en_progreso si está pendiente
+            if ($ticket->status === 'pendiente') {
+                $ticket->update(['status' => 'en_progreso']);
+            }
 
             DB::commit();
 
