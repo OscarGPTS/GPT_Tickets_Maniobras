@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -89,11 +90,13 @@ class TicketController extends Controller
             }
 
             // Notificar a todos los usuarios de almacén
-            $almacenUsers = User::where('role', 'almacen')->get();
-            Notification::send($almacenUsers, new TicketCreated($ticket));
-
+            try {
+                $almacenUsers = User::where('role', 'almacen')->get();
+                Notification::send($almacenUsers, new TicketCreated($ticket));
+            } catch (\Exception $e) {
+                Log::error('Error al crear el ticket: ' . $e->getMessage());
+            }
             DB::commit();
-
             return redirect()->route('tickets.index')
                 ->with('success', 'Ticket creado exitosamente. Se ha notificado al equipo de almacén.');
 

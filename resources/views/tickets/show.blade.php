@@ -60,15 +60,16 @@
                         </h2>
                         <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
                             @foreach($ticket->images as $image)
-                                <div class="group relative">
+                                <div class="group relative cursor-pointer image-preview-container"
+                                     data-image-src="{{ Storage::url($image->file_path) }}"
+                                     data-image-title="{{ $image->original_name }}">
                                     <img src="{{ Storage::url($image->file_path) }}" 
                                          alt="Imagen del ticket" 
-                                         class="h-32 w-full object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity duration-200"
-                                         onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-25 transition-opacity duration-200 rounded-lg flex items-center justify-center">
+                                         class="h-32 w-full object-cover rounded-lg hover:opacity-75 transition-opacity duration-200">
+                                    <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-25 transition-opacity duration-200 rounded-lg flex items-center justify-center pointer-events-none">
                                         <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
                                     </div>
-                                    <div class="absolute bottom-1 left-1 bg-black bg-opacity-75 text-white text-xs px-1 rounded max-w-full truncate">
+                                    <div class="absolute bottom-1 left-1 bg-black bg-opacity-75 text-white text-xs px-1 rounded max-w-full truncate pointer-events-none">
                                         {{ $image->original_name }}
                                     </div>
                                 </div>
@@ -95,12 +96,13 @@
                                 <h3 class="text-md font-medium text-gray-900 mb-2">Imágenes de Evidencia</h3>
                                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
                                     @foreach($evidenceImages as $image)
-                                        <div class="group relative">
+                                        <div class="group relative cursor-pointer image-preview-container"
+                                             data-image-src="{{ Storage::url($image->file_path) }}"
+                                             data-image-title="Evidencia - {{ $image->original_name }}">
                                             <img src="{{ Storage::url($image->file_path) }}" 
                                                  alt="Evidencia del trabajo" 
-                                                 class="h-32 w-full object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity duration-200"
-                                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', 'Evidencia - {{ $image->original_name }}')">
-                                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-25 transition-opacity duration-200 rounded-lg flex items-center justify-center">
+                                                 class="h-32 w-full object-cover rounded-lg hover:opacity-75 transition-opacity duration-200">
+                                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-25 transition-opacity duration-200 rounded-lg flex items-center justify-center pointer-events-none">
                                                 <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
                                             </div>
                                         </div>
@@ -315,29 +317,78 @@
 
 @push('scripts')
 <script>
+console.log('Script cargado');
+
+// Event listeners para las imágenes
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    
+    // Agregar event listeners a todos los contenedores de imágenes
+    const imageContainers = document.querySelectorAll('.image-preview-container');
+    console.log('Contenedores de imágenes encontrados:', imageContainers.length);
+    
+    imageContainers.forEach(function(container, index) {
+        console.log('Agregando listener a contenedor', index);
+        container.addEventListener('click', function(e) {
+            console.log('Click en contenedor detectado');
+            const imageSrc = this.getAttribute('data-image-src');
+            const imageTitle = this.getAttribute('data-image-title');
+            console.log('Image src:', imageSrc);
+            console.log('Image title:', imageTitle);
+            openImageModal(imageSrc, imageTitle);
+        });
+    });
+    
+    // Cerrar modal al hacer clic fuera de él
+    const imageModal = document.getElementById('imageModal');
+    console.log('Modal encontrado:', imageModal ? 'Si' : 'No');
+    
+    if (imageModal) {
+        imageModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageModal();
+            }
+        });
+    }
+    
+    // Cerrar modal con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+});
+
 function openImageModal(imageSrc, title) {
-    document.getElementById('modalImage').src = imageSrc;
-    document.getElementById('modalImageTitle').textContent = title;
-    document.getElementById('imageModal').classList.remove('hidden');
+    console.log('openImageModal llamado con:', imageSrc, title);
+    const modalImage = document.getElementById('modalImage');
+    const modalImageTitle = document.getElementById('modalImageTitle');
+    const imageModal = document.getElementById('imageModal');
+    
+    console.log('Elementos del modal:', {
+        modalImage: modalImage ? 'encontrado' : 'no encontrado',
+        modalImageTitle: modalImageTitle ? 'encontrado' : 'no encontrado',
+        imageModal: imageModal ? 'encontrado' : 'no encontrado'
+    });
+    
+    if (modalImage && modalImageTitle && imageModal) {
+        modalImage.src = imageSrc;
+        modalImageTitle.textContent = title;
+        imageModal.classList.remove('hidden');
+        console.log('Modal abierto');
+    } else {
+        console.error('No se pudo abrir el modal, elementos faltantes');
+    }
 }
 
 function closeImageModal() {
-    document.getElementById('imageModal').classList.add('hidden');
+    console.log('closeImageModal llamado');
+    const imageModal = document.getElementById('imageModal');
+    if (imageModal) {
+        imageModal.classList.add('hidden');
+        console.log('Modal cerrado');
+    }
 }
-
-// Cerrar modal al hacer clic fuera de él
-document.getElementById('imageModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeImageModal();
-    }
-});
-
-// Cerrar modal con tecla Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeImageModal();
-    }
-});
 
 // Función para calificación con estrellas
 function setRating(rating) {
@@ -345,18 +396,22 @@ function setRating(rating) {
     const ratingText = document.getElementById('rating-text');
     const stars = document.querySelectorAll('.rating-star');
     
+    if (!ratingInput || !ratingText || !stars.length) return;
+    
     // Actualizar el input hidden
     ratingInput.value = rating;
     
     // Actualizar las estrellas visualmente
     stars.forEach((star, index) => {
         const icon = star.querySelector('i');
-        if (index < rating) {
-            icon.classList.remove('text-gray-300');
-            icon.classList.add('text-yellow-400');
-        } else {
-            icon.classList.remove('text-yellow-400');
-            icon.classList.add('text-gray-300');
+        if (icon) {
+            if (index < rating) {
+                icon.classList.remove('text-gray-300');
+                icon.classList.add('text-yellow-400');
+            } else {
+                icon.classList.remove('text-yellow-400');
+                icon.classList.add('text-gray-300');
+            }
         }
     });
     
