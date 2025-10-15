@@ -6,9 +6,7 @@ use App\Models\Ticket;
 use App\Models\TicketImage;
 use App\Models\User;
 use App\Models\Survey;
-use App\Notifications\TicketCreated;
-use App\Notifications\TicketAssigned;
-use App\Notifications\TicketCompleted;
+use App\Notifications\TicketCreatedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -91,11 +89,16 @@ class TicketController extends Controller
 
             // Notificar a todos los usuarios de almacén
             try {
-                $almacenUsers = User::where('role', 'almacen')->get();
-                Notification::send($almacenUsers, new TicketCreated($ticket));
+                $almacenUsers = User::role('almacen')->get();
+                if ($almacenUsers->count() > 0) {
+                    Notification::send($almacenUsers, new TicketCreatedNotification($ticket));
+                    Log::info('Notificación enviada a ' . $almacenUsers->count() . ' usuarios de almacén para ticket #' . $ticket->id);
+                }
             } catch (\Exception $e) {
-                Log::error('Error al crear el ticket: ' . $e->getMessage());
+                Log::error('Error al enviar notificaciones de ticket creado: ' . $e->getMessage());
+                // No detenemos el proceso si falla la notificación
             }
+            
             DB::commit();
             return redirect()->route('tickets.index')
                 ->with('success', 'Ticket creado exitosamente. Se ha notificado al equipo de almacén.');

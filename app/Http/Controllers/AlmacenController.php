@@ -6,12 +6,13 @@ use App\Models\Ticket;
 use App\Models\TicketImage;
 use App\Models\Survey;
 use App\Models\User;
-use App\Notifications\TicketAssigned;
-use App\Notifications\TicketCompleted;
+use App\Notifications\TicketAssignedNotification;
+use App\Notifications\TicketCompletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AlmacenController extends Controller
 {
@@ -93,16 +94,26 @@ class AlmacenController extends Controller
             return back()->withErrors(['error' => 'Este ticket ya ha sido asignado.']);
         }
 
+        DB::beginTransaction();
         try {
             $ticket->assignTo(Auth::user());
 
             // Notificar al usuario solicitante
-            $ticket->user->notify(new TicketAssigned($ticket));
+            try {
+                $ticket->user->notify(new TicketAssignedNotification($ticket));
+                Log::info('Notificación de asignación enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación de ticket asignado: ' . $e->getMessage());
+                // No detenemos el proceso si falla la notificación
+            }
+
+            DB::commit();
 
             return redirect()->route('almacen.tickets.mine')
                 ->with('success', 'Ticket asignado exitosamente.');
 
         } catch (\Exception $e) {
+            DB::rollback();
             return back()->withErrors(['error' => 'Error al asignar el ticket: ' . $e->getMessage()]);
         }
     }
@@ -205,7 +216,13 @@ class AlmacenController extends Controller
             ]);
 
             // Notificar al usuario solicitante
-            $ticket->user->notify(new TicketCompleted($ticket));
+            try {
+                $ticket->user->notify(new TicketCompletedNotification($ticket));
+                Log::info('Notificación de ticket completado enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación de ticket completado: ' . $e->getMessage());
+                // No detenemos el proceso si falla la notificación
+            }
 
             DB::commit();
 

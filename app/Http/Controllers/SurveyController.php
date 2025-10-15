@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Survey;
 use App\Models\Ticket;
+use App\Notifications\SurveyCompletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SurveyController extends Controller
 {
@@ -147,6 +150,7 @@ class SurveyController extends Controller
             'comments' => 'nullable|string|max:500',
         ]);
 
+        DB::beginTransaction();
         try {
             $survey->update([
                 'rating' => $request->rating,
@@ -154,10 +158,25 @@ class SurveyController extends Controller
                 'completed_at' => now(),
             ]);
 
+            // Notificar al miembro de almacén que completó el ticket
+            $ticket = $survey->ticket;
+            if ($ticket->assignedTo) {
+                try {
+                    $ticket->assignedTo->notify(new SurveyCompletedNotification($survey));
+                    Log::info('Notificación de encuesta completada enviada al usuario #' . $ticket->assigned_to . ' para ticket #' . $ticket->id);
+                } catch (\Exception $e) {
+                    Log::error('Error al enviar notificación de encuesta completada: ' . $e->getMessage());
+                    // No detenemos el proceso si falla la notificación
+                }
+            }
+
+            DB::commit();
+
             return redirect()->route('tickets.show', $survey->ticket_id)
                 ->with('success', '¡Gracias por tu calificación!');
 
         } catch (\Exception $e) {
+            DB::rollback();
             return back()->withErrors(['error' => 'Error al completar la encuesta: ' . $e->getMessage()]);
         }
     }

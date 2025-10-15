@@ -9,6 +9,7 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,9 +37,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::middleware(['auth'])->group(function () {
     
     // Notificaciones
-    Route::get('/notifications', [DashboardController::class, 'notifications'])->name('notifications.index');
-    Route::post('/notifications/{notification}/read', [DashboardController::class, 'markNotificationAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [DashboardController::class, 'markAllNotificationsAsRead'])->name('notifications.readAll');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    Route::delete('/notifications-read/delete-all', [NotificationController::class, 'deleteAllRead'])->name('notifications.delete-all-read');
     
     // Tickets - Rutas para usuarios normales
     Route::resource('tickets', TicketController::class);
