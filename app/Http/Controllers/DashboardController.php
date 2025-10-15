@@ -68,29 +68,92 @@ class DashboardController extends Controller
             abort(403, 'No tienes acceso al panel de administración.');
         }
 
+        // Estadísticas generales
+        $totalSurveys = Survey::count();
+        $completedSurveys = Survey::whereNotNull('completed_at')->count();
+        $averageRating = Survey::whereNotNull('completed_at')->avg('rating') ?? 0;
+        $satisfactionCount = Survey::whereNotNull('completed_at')->where('rating', '>=', 4)->count();
+        $satisfactionPercentage = $completedSurveys > 0 ? round(($satisfactionCount / $completedSurveys) * 100) : 0;
+
         $stats = [
             'total_users' => \App\Models\User::count(),
             'total_tickets' => Ticket::count(),
-            'pending_tickets' => Ticket::pendientes()->count(),
-            'in_progress_tickets' => Ticket::enProceso()->count(),
-            'completed_tickets' => Ticket::finalizados()->count(),
-            'pending_surveys' => Survey::pendientes()->count(),
-            'completed_surveys' => Survey::completadas()->count(),
-            'average_rating' => Survey::whereNotNull('completed_at')->avg('rating'),
+            'pending_tickets' => Ticket::where('status', Ticket::STATUS_PENDIENTE)->count(),
+            'in_progress_tickets' => Ticket::where('status', Ticket::STATUS_EN_PROCESO)->count(),
+            'completed_tickets' => Ticket::where('status', Ticket::STATUS_FINALIZADO)->count(),
+            'total_surveys' => $totalSurveys,
+            'pending_surveys' => Survey::whereNull('completed_at')->count(),
+            'completed_surveys' => $completedSurveys,
+            'average_rating' => round($averageRating, 1),
+            'satisfaction_percentage' => $satisfactionPercentage,
         ];
 
+        // Usuarios por rol
+        $usersByRole = [
+            'admin' => \App\Models\User::role('admin')->count(),
+            'almacen' => \App\Models\User::role('almacen')->count(),
+            'solicitante' => \App\Models\User::whereDoesntHave('roles', function($query) {
+                $query->whereIn('name', ['admin', 'almacen']);
+            })->count(),
+        ];
+
+        // Usuarios recientes
+        $recentUsers = \App\Models\User::with('roles')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // Tickets recientes
         $recentTickets = Ticket::with(['user', 'assignedTo'])
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->latest()
+            ->limit(5)
             ->get();
 
-        $recentSurveys = Survey::with(['user', 'ticket'])
-            ->whereNotNull('completed_at')
-            ->orderBy('completed_at', 'desc')
-            ->limit(10)
-            ->get();
+        // Estadísticas por miembro de almacén
+        $almacenUsers = \App\Models\User::role('almacen')->get();
+        $almacenStats = [];
 
-        return view('admin.dashboard', compact('stats', 'recentTickets', 'recentSurveys'));
+        foreach ($almacenUsers as $user) {
+            $totalTickets = Ticket::where('assigned_to', $user->id)->count();
+            $completedTickets = Ticket::where('assigned_to', $user->id)
+                ->where('status', Ticket::STATUS_FINALIZADO)
+                ->count();
+            
+            $surveys = Survey::whereHas('ticket', function($query) use ($user) {
+                $query->where('assigned_to', $user->id);
+            })->whereNotNull('completed_at')->get();
+
+            $totalSurveysForUser = $surveys->count();
+            $avgRating = $totalSurveysForUser > 0 ? round($surveys->avg('rating'), 1) : 0;
+            $satisfactionCount = $surveys->where('rating', '>=', 4)->count();
+            $satisfactionPercentage = $totalSurveysForUser > 0 
+                ? round(($satisfactionCount / $totalSurveysForUser) * 100) 
+                : 0;
+
+            $almacenStats[] = [
+                'name' => $user->name,
+                'email' => $user->email,
+                'total_tickets' => $totalTickets,
+                'completed_tickets' => $completedTickets,
+                'total_surveys' => $totalSurveysForUser,
+                'average_rating' => $avgRating,
+                'satisfaction_percentage' => $satisfactionPercentage,
+            ];
+        }
+
+        // Todos los tickets con paginación
+        $allTickets = Ticket::with(['user', 'assignedTo', 'survey'])
+            ->latest()
+            ->paginate(15);
+
+        return view('admin.dashboard-new', compact(
+            'stats', 
+            'usersByRole', 
+            'recentUsers', 
+            'recentTickets', 
+            'almacenStats', 
+            'allTickets'
+        ));
     }
 
     /**

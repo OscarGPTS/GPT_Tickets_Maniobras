@@ -112,7 +112,7 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('admin.dashboard', compact('stats', 'usersByRole', 'recentUsers', 'recentTickets', 'allTickets', 'almacenStats'));
+        return view('admin.dashboard-new', compact('stats', 'usersByRole', 'recentUsers', 'recentTickets', 'allTickets', 'almacenStats'));
     }
 
     /**
@@ -287,6 +287,9 @@ class AdminController extends Controller
                     ->whereYear('created_at', $date->year)->count(),
             ];
         }
+
+        // Convertir a colección para poder usar métodos de colección en la vista
+        $monthlyData = collect($monthlyData);
 
         return view('admin.statistics', compact('stats', 'monthlyData'));
     }
