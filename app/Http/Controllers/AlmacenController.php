@@ -46,7 +46,7 @@ class AlmacenController extends Controller
             ->whereDate('completed_at', today())
             ->count();
 
-        return view('almacen.dashboard', compact('pendingTickets', 'myTickets', 'completedToday'));
+        return view('almacen.dashboard-new', compact('pendingTickets', 'myTickets', 'completedToday'));
     }
 
     /**
@@ -65,14 +65,20 @@ class AlmacenController extends Controller
     /**
      * Ver mis tickets asignados
      */
-    public function myTickets()
+    public function myTickets(Request $request)
     {
-        $tickets = Ticket::where('assigned_to', Auth::id())
-            ->with(['user', 'images'])
-            ->orderBy('assigned_at', 'desc')
+        $query = Ticket::where('assigned_to', Auth::id())
+            ->with(['user', 'images']);
+
+        // Filtro por estado
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $tickets = $query->orderBy('assigned_at', 'desc')
             ->paginate(15);
 
-        return view('almacen.my-tickets', compact('tickets'));
+        return view('almacen.my-tickets-new', compact('tickets'));
     }
 
     /**

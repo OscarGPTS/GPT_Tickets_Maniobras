@@ -33,30 +33,41 @@ class HomeController extends Controller
     {
         $user = Auth::user();
         
-        // Obtener tickets del usuario
-        $myTickets = Ticket::where('user_id', $user->id)
-            ->with(['assignedTo', 'survey'])
-            ->orderBy('created_at', 'desc')
-            ->take(5)
+        // Tickets activos (pendientes + en proceso)
+        $activeTickets = Ticket::where('user_id', $user->id)
+            ->with(['assignedTo', 'images'])
+            ->whereIn('status', [Ticket::STATUS_PENDIENTE, Ticket::STATUS_EN_PROCESO])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // Tickets completados recientes
+        $completedTickets = Ticket::where('user_id', $user->id)
+            ->with(['assignedTo', 'images', 'survey'])
+            ->where('status', Ticket::STATUS_FINALIZADO)
+            ->latest('completed_at')
+            ->limit(5)
             ->get();
         
         // Verificar si hay encuestas pendientes
         $pendingSurveys = Survey::whereHas('ticket', function($query) use ($user) {
             $query->where('user_id', $user->id);
-        })->where('completed_at', null)->get();
+        })
+        ->whereNull('completed_at')
+        ->with('ticket.assignedTo')
+        ->get();
         
-        // Estadísticas básicas
+        // Estadísticas completas
         $stats = [
             'total_tickets' => Ticket::where('user_id', $user->id)->count(),
-            'pending_tickets' => Ticket::where('user_id', $user->id)->where('status', 'pendiente')->count(),
-            'in_progress_tickets' => Ticket::where('user_id', $user->id)->where('status', 'en_proceso')->count(),
-            'completed_tickets' => Ticket::where('user_id', $user->id)->where('status', 'finalizado')->count(),
-            'pending_surveys' => $pendingSurveys->count(),
+            'pending_tickets' => Ticket::where('user_id', $user->id)->where('status', Ticket::STATUS_PENDIENTE)->count(),
+            'in_progress_tickets' => Ticket::where('user_id', $user->id)->where('status', Ticket::STATUS_EN_PROCESO)->count(),
+            'completed_tickets' => Ticket::where('user_id', $user->id)->where('status', Ticket::STATUS_FINALIZADO)->count(),
         ];
         
-        // Verificar si puede crear un nuevo ticket
+        // Verificar si puede crear un nuevo ticket (solo si no tiene encuestas pendientes)
         $canCreateTicket = $user->canCreateTicket();
         
-        return view('dashboard', compact('myTickets', 'pendingSurveys', 'stats', 'canCreateTicket'));
+        return view('dashboard-new', compact('activeTickets', 'completedTickets', 'pendingSurveys', 'stats', 'canCreateTicket'));
     }
 }

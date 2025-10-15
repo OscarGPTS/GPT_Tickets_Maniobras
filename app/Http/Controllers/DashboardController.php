@@ -22,29 +22,41 @@ class DashboardController extends Controller
         }
 
         // Dashboard para usuarios normales
-        $myTickets = $user->tickets()
-            ->with(['assignedTo', 'survey'])
-            ->orderBy('created_at', 'desc')
+        // Tickets activos (pendientes + en proceso)
+        $activeTickets = $user->tickets()
+            ->with(['assignedTo', 'images'])
+            ->whereIn('status', [Ticket::STATUS_PENDIENTE, Ticket::STATUS_EN_PROCESO])
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        // Tickets completados recientes
+        $completedTickets = $user->tickets()
+            ->with(['assignedTo', 'images', 'survey'])
+            ->where('status', Ticket::STATUS_FINALIZADO)
+            ->latest('completed_at')
             ->limit(5)
             ->get();
 
+        // Encuestas pendientes
         $pendingSurveys = $user->surveys()
             ->pendientes()
-            ->with(['ticket'])
+            ->with(['ticket.assignedTo'])
             ->get();
 
+        // Estadísticas completas
         $stats = [
             'total_tickets' => $user->tickets()->count(),
             'pending_tickets' => $user->tickets()->pendientes()->count(),
             'in_progress_tickets' => $user->tickets()->enProceso()->count(),
             'completed_tickets' => $user->tickets()->finalizados()->count(),
-            'pending_surveys' => $pendingSurveys->count(),
         ];
 
-        // Verificar si puede crear un nuevo ticket
+        // Verificar si puede crear un nuevo ticket (solo si no tiene encuestas pendientes)
         $canCreateTicket = $user->canCreateTicket();
 
-        return view('dashboard', compact('myTickets', 'pendingSurveys', 'stats', 'canCreateTicket'));
+        // Redirigir a la vista mejorada
+        return view('dashboard-new', compact('activeTickets', 'completedTickets', 'pendingSurveys', 'stats', 'canCreateTicket'));
     }
 
     /**

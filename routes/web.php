@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
     // Tickets - Rutas para usuarios normales
     Route::resource('tickets', TicketController::class);
     Route::delete('/tickets/{ticket}/images/{image}', [TicketController::class, 'deleteImage'])->name('tickets.images.delete');
+    Route::post('/tickets/{ticket}/cancel', [TicketController::class, 'cancel'])->name('tickets.cancel');
     
     // Encuestas
     Route::resource('surveys', SurveyController::class)->except(['create', 'store', 'destroy']);

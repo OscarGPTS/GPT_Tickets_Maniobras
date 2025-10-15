@@ -19,14 +19,20 @@ class TicketController extends Controller
     /**
      * Display a listing of the user's tickets.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $tickets = Auth::user()->tickets()
+        $query = Auth::user()->tickets()
             ->with(['assignedTo', 'images', 'survey'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->orderBy('created_at', 'desc');
 
-        return view('tickets.index', compact('tickets'));
+        // Filtrar por estado si se proporciona
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $tickets = $query->paginate(15);
+
+        return view('tickets.index-new', compact('tickets'));
     }
 
     /**
@@ -235,6 +241,50 @@ class TicketController extends Controller
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error al eliminar la imagen: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Cancelar un ticket
+     */
+    public function cancel(Request $request, Ticket $ticket)
+    {
+        // Verificar que el usuario es el propietario
+        if ($ticket->user_id !== Auth::id()) {
+            abort(403, 'No puedes cancelar este ticket.');
+        }
+
+        // Verificar que el ticket puede ser cancelado
+        if (!$ticket->canBeCancelled()) {
+            return back()->withErrors(['error' => 'Este ticket no puede ser cancelado en su estado actual.']);
+        }
+
+        $request->validate([
+            'cancellation_reason' => 'required|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $ticket->cancel($request->cancellation_reason);
+
+            // Notificar al miembro de almacén si estaba asignado
+            if ($ticket->assigned_to) {
+                try {
+                    $ticket->assignedTo->notify(new \App\Notifications\TicketCancelledNotification($ticket));
+                    Log::info('Notificación de cancelación enviada al usuario #' . $ticket->assigned_to . ' para ticket #' . $ticket->id);
+                } catch (\Exception $e) {
+                    Log::error('Error al enviar notificación de ticket cancelado: ' . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('tickets.index')
+                ->with('success', 'Ticket cancelado exitosamente.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Error al cancelar el ticket: ' . $e->getMessage()]);
         }
     }
 }

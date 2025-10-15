@@ -23,6 +23,8 @@ class Ticket extends Model
         'work_evidence',
         'assigned_at',
         'completed_at',
+        'cancellation_reason',
+        'cancelled_at',
     ];
 
     /**
@@ -33,6 +35,7 @@ class Ticket extends Model
     protected $casts = [
         'assigned_at' => 'datetime',
         'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     /**
@@ -41,6 +44,7 @@ class Ticket extends Model
     const STATUS_PENDIENTE = 'pendiente';
     const STATUS_EN_PROCESO = 'en_proceso';
     const STATUS_FINALIZADO = 'finalizado';
+    const STATUS_CANCELADO = 'cancelado';
 
     /**
      * Relaciones
@@ -93,6 +97,11 @@ class Ticket extends Model
         return $query->where('status', self::STATUS_FINALIZADO);
     }
 
+    public function scopeCancelados($query)
+    {
+        return $query->where('status', self::STATUS_CANCELADO);
+    }
+
     /**
      * Métodos de estado
      */
@@ -109,6 +118,16 @@ class Ticket extends Model
     public function isFinalizado(): bool
     {
         return $this->status === self::STATUS_FINALIZADO;
+    }
+
+    public function isCancelado(): bool
+    {
+        return $this->status === self::STATUS_CANCELADO;
+    }
+
+    public function canBeCancelled(): bool
+    {
+        return in_array($this->status, [self::STATUS_PENDIENTE, self::STATUS_EN_PROCESO]);
     }
 
     /**
@@ -135,6 +154,18 @@ class Ticket extends Model
     }
 
     /**
+     * Cancelar ticket
+     */
+    public function cancel(string $reason = null): void
+    {
+        $this->update([
+            'status' => self::STATUS_CANCELADO,
+            'cancellation_reason' => $reason,
+            'cancelled_at' => now(),
+        ]);
+    }
+
+    /**
      * Obtener el badge de estado
      */
     public function getStatusBadgeAttribute(): string
@@ -156,6 +187,7 @@ class Ticket extends Model
             self::STATUS_PENDIENTE => 'bg-yellow-100 text-yellow-800',
             self::STATUS_EN_PROCESO => 'bg-blue-100 text-blue-800',
             self::STATUS_FINALIZADO => 'bg-green-100 text-green-800',
+            self::STATUS_CANCELADO => 'bg-red-100 text-red-800',
             default => 'bg-gray-100 text-gray-800',
         };
     }
@@ -169,6 +201,7 @@ class Ticket extends Model
             self::STATUS_PENDIENTE => 'Pendiente',
             self::STATUS_EN_PROCESO => 'En Proceso',
             self::STATUS_FINALIZADO => 'Finalizado',
+            self::STATUS_CANCELADO => 'Cancelado',
             default => 'Desconocido',
         };
     }
