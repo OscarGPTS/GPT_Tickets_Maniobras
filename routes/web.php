@@ -8,6 +8,7 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -49,8 +50,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/surveys/{survey}/complete', [SurveyController::class, 'completeSimple'])->name('surveys.complete');
     Route::post('/surveys/{survey}/quick-complete', [SurveyController::class, 'quickComplete'])->name('surveys.quickComplete');
     Route::post('/surveys/quick-complete-all', [SurveyController::class, 'quickCompleteAll'])->name('surveys.quickCompleteAll');
+
     
 });
+
+Route::get('/test/pdf', [TestController::class, 'testPdf'])->name('test.pdf');
 
 /*
 |--------------------------------------------------------------------------

@@ -81,13 +81,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Construir URL de logout de Auth0
-        $logoutUrl = 'https://' . config('services.auth0.domain') . '/v2/logout?' . http_build_query([
-            'client_id' => config('services.auth0.client_id'),
-            'returnTo' => config('app.url'),
-        ]);
-
-        return redirect($logoutUrl);
+        return redirect('/');
     }
 
     /**
