@@ -184,9 +184,9 @@
                                 <span class="text-sm font-medium text-gray-700">En Progreso</span>
                             </div>
                             <div class="text-right">
-                                <span class="text-lg font-bold text-gray-900">{{ $stats['tickets']['by_status']['en_progreso'] }}</span>
+                                <span class="text-lg font-bold text-gray-900">{{ $stats['tickets']['by_status']['en_proceso'] }}</span>
                                 <p class="text-xs text-gray-500">
-                                    {{ $stats['tickets']['total'] > 0 ? round(($stats['tickets']['by_status']['en_progreso'] / $stats['tickets']['total']) * 100, 1) : 0 }}%
+                                    {{ $stats['tickets']['total'] > 0 ? round(($stats['tickets']['by_status']['en_proceso'] / $stats['tickets']['total']) * 100, 1) : 0 }}%
                                 </p>
                             </div>
                         </div>

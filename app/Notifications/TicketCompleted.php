@@ -26,7 +26,8 @@ class TicketCompleted extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // return ['mail', 'database']; // Descomentar para activar emails
+        return ['database']; // Solo base de datos por ahora
     }
 
     /**
@@ -35,17 +36,11 @@ class TicketCompleted extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Tu solicitud ha sido completada')
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('Tu solicitud de movimiento de carga ha sido completada.')
-            ->line('**Título:** ' . $this->ticket->title)
-            ->line('**Completada por:** ' . $this->ticket->assignedTo->name)
-            ->line('**Fecha de finalización:** ' . $this->ticket->completed_at->format('d/m/Y H:i'))
-            ->when($this->ticket->work_evidence, function ($mail) {
-                return $mail->line('**Evidencia del trabajo:** ' . $this->ticket->work_evidence);
-            })
-            ->action('Ver Solicitud y Calificar', url('/tickets/' . $this->ticket->id))
-            ->line('Por favor, califica el servicio completando la encuesta de satisfacción.');
+            ->subject('Ticket completado #' . $this->ticket->id)
+            ->view('emails.tickets.completed', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

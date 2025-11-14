@@ -19,16 +19,18 @@
                     <div class="flex items-center space-x-1">
                         @auth
                             <a href="{{ route('dashboard') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600' }}">
-                                <i class="fas fa-home mr-2 {{ request()->routeIs('dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500' }}"></i>
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('dashboard') || request()->routeIs('solicitante.dashboard') || request()->routeIs('almacen.dashboard') || request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600' }}">
+                                <i class="fas fa-home mr-2 {{ request()->routeIs('dashboard') || request()->routeIs('*.dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500' }}"></i>
                                 Dashboard
                             </a>
                             
-                            <a href="{{ route('tickets.index') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('tickets.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600' }}">
-                                <i class="fas fa-ticket-alt mr-2 {{ request()->routeIs('tickets.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500' }}"></i>
-                                Mis Tickets
-                            </a>
+                            @if(auth()->user()->hasRole('solicitante'))
+                                <a href="{{ route('solicitante.tickets.index') }}" 
+                                   class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('solicitante.tickets.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600' }}">
+                                    <i class="fas fa-ticket-alt mr-2 {{ request()->routeIs('solicitante.tickets.*') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500' }}"></i>
+                                    Mis Tickets
+                                </a>
+                            @endif
                             
                             @if(auth()->user()->roles()->where('name', 'almacen')->exists())
                                 <a href="{{ route('almacen.dashboard') }}" 
@@ -54,7 +56,17 @@
             <div class="flex items-center space-x-4">
                 @auth
                     <!-- Notifications -->
-                    <a href="{{ route('notifications.index') }}" 
+                    @php
+                        $notificationsRoute = 'notifications.index';
+                        if(auth()->user()->hasRole('solicitante')) {
+                            $notificationsRoute = 'solicitante.notifications.index';
+                        } elseif(auth()->user()->hasRole('almacen')) {
+                            $notificationsRoute = 'almacen.notifications.index';
+                        } elseif(auth()->user()->hasRole('admin')) {
+                            $notificationsRoute = 'admin.notifications.index';
+                        }
+                    @endphp
+                    <a href="{{ route($notificationsRoute) }}" 
                        class="relative p-2 text-gray-400 hover:text-indigo-600 transition-colors duration-200 rounded-lg hover:bg-gray-50">
                         <i class="fas fa-bell text-lg"></i>
                         @if(auth()->user()->unreadNotifications->count() > 0)
@@ -139,7 +151,17 @@
 
                             <!-- Menu Items -->
                             <div class="py-2">
-                                <a href="{{ route('notifications.index') }}" 
+                                @php
+                                    $notificationsRoute = 'notifications.index';
+                                    if(auth()->user()->hasRole('solicitante')) {
+                                        $notificationsRoute = 'solicitante.notifications.index';
+                                    } elseif(auth()->user()->hasRole('almacen')) {
+                                        $notificationsRoute = 'almacen.notifications.index';
+                                    } elseif(auth()->user()->hasRole('admin')) {
+                                        $notificationsRoute = 'admin.notifications.index';
+                                    }
+                                @endphp
+                                <a href="{{ route($notificationsRoute) }}" 
                                    class="group flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
                                    role="menuitem">
                                     <i class="fas fa-bell mr-3 text-gray-400 group-hover:text-indigo-500"></i>
@@ -158,12 +180,14 @@
                                     Mi Perfil
                                 </a>
                                 
-                                <a href="{{ route('tickets.index') }}" 
-                                   class="group flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
-                                   role="menuitem">
-                                    <i class="fas fa-ticket-alt mr-3 text-gray-400 group-hover:text-indigo-500"></i>
-                                    Mis Tickets
-                                </a>
+                                @if(auth()->user()->hasRole('solicitante'))
+                                    <a href="{{ route('solicitante.tickets.index') }}" 
+                                       class="group flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                       role="menuitem">
+                                        <i class="fas fa-ticket-alt mr-3 text-gray-400 group-hover:text-indigo-500"></i>
+                                        Mis Tickets
+                                    </a>
+                                @endif
                             </div>
 
                             <!-- Logout -->

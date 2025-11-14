@@ -29,7 +29,8 @@ class TicketCancelledNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        // return ['mail', 'database']; // Descomentar para activar emails
+        return ['database']; // Solo base de datos por ahora
     }
 
     /**
@@ -38,15 +39,11 @@ class TicketCancelledNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Ticket Cancelado #' . $this->ticket->id)
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('El ticket que estabas atendiendo ha sido cancelado por el solicitante.')
-            ->line('**Ticket #' . $this->ticket->id . ':** ' . $this->ticket->title)
-            ->line('**Solicitante:** ' . $this->ticket->user->name)
-            ->line('**Razón de cancelación:** ' . ($this->ticket->cancellation_reason ?? 'No especificada'))
-            ->action('Ver Ticket', route('almacen.tickets.show', $this->ticket))
-            ->line('Este ticket ya no requiere más acciones de tu parte.')
-            ->salutation('Saludos, ' . config('app.name'));
+            ->subject('Ticket cancelado #' . $this->ticket->id)
+            ->view('emails.tickets.cancelled', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

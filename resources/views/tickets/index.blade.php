@@ -14,7 +14,7 @@
                 </p>
             </div>
             @if(auth()->user()->canCreateTicket())
-                <a href="{{ route('tickets.create') }}" 
+                <a href="{{ route('solicitante.tickets.create') }}" 
                    class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 focus:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                     <i class="fas fa-plus mr-2"></i>
                     Nueva Solicitud
@@ -30,7 +30,7 @@
                                 Tienes encuestas pendientes. Completa tus encuestas para crear nuevos tickets.
                             </p>
                             <div class="mt-2">
-                                <a href="{{ route('tickets.index', ['filter' => 'survey_pending']) }}" 
+                                <a href="{{ route('solicitante.tickets.index', ['filter' => 'survey_pending']) }}" 
                                    class="text-sm font-medium text-yellow-800 underline hover:text-yellow-900">
                                     Ver tickets con encuestas pendientes
                                 </a>
@@ -129,14 +129,14 @@
                                     @endif
                                 </div>
                                 <div class="flex-shrink-0 flex items-center space-x-2">
-                                    <a href="{{ route('tickets.show', $ticket) }}" 
+                                    <a href="{{ route('solicitante.tickets.show', $ticket) }}" 
                                        class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                         <i class="fas fa-eye mr-1"></i>
                                         Ver
                                     </a>
                                     
                                     @if($ticket->status === 'pendiente')
-                                        <a href="{{ route('tickets.edit', $ticket) }}" 
+                                        <a href="{{ route('solicitante.tickets.edit', $ticket) }}" 
                                            class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                             <i class="fas fa-edit mr-1"></i>
                                             Editar
@@ -144,7 +144,7 @@
                                     @endif
 
                                     @if($ticket->status === 'finalizado' && $ticket->survey && !$ticket->survey->completed_at)
-                                        <a href="{{ route('tickets.show', $ticket) }}" 
+                                        <a href="{{ route('solicitante.tickets.show', $ticket) }}" 
                                            class="inline-flex items-center px-3 py-2 bg-yellow-600 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500">
                                             <i class="fas fa-star mr-1"></i>
                                             Calificar
@@ -174,7 +174,7 @@
                     </p>
                     @if(auth()->user()->canCreateTicket())
                         <div class="mt-6">
-                            <a href="{{ route('tickets.create') }}" 
+                            <a href="{{ route('solicitante.tickets.create') }}" 
                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                 <i class="fas fa-plus mr-2"></i>
                                 Crear mi primer ticket

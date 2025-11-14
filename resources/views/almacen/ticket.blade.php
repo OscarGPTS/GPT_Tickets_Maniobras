@@ -6,6 +6,28 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
+        <!-- Alerta de Ticket Cancelado -->
+        @if($ticket->status === 'cancelado')
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-md p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Ticket Cancelado</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Este ticket ha sido cancelado por el solicitante. No se puede trabajar en tickets cancelados.</p>
+                            @if($ticket->cancellation_reason)
+                                <p class="mt-1"><strong>Razón:</strong> {{ $ticket->cancellation_reason }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         <!-- Header -->
         <div class="mb-8">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -43,8 +65,9 @@
                     <div class="flex items-center space-x-2">
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                             @if($ticket->status === 'completado') bg-green-100 text-green-800
-                            @elseif($ticket->status === 'en_progreso') bg-blue-100 text-blue-800
+                            @elseif($ticket->status === 'en_proceso') bg-blue-100 text-blue-800
                             @elseif($ticket->status === 'pendiente') bg-yellow-100 text-yellow-800
+                            @elseif($ticket->status === 'cancelado') bg-red-100 text-red-800
                             @else bg-gray-100 text-gray-800 @endif">
                             {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                         </span>
@@ -227,7 +250,7 @@
                             <p class="text-xs text-gray-500">Completada el {{ $ticket->survey->completed_at->format('d/m/Y H:i') }}</p>
                         </div>
                     @else
-                        <form method="POST" action="{{ route('surveys.complete', $ticket->survey) }}" class="space-y-3">
+                        <form method="POST" action="{{ route('solicitante.surveys.complete', $ticket->survey) }}" class="space-y-3">
                             @csrf
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Califica tu experiencia (1-5 estrellas):</label>
@@ -258,30 +281,71 @@
             </div>
         @endif
 
-        <!-- Acciones del Ticket -->
-        @if($ticket->status === 'pendiente')
+        <!-- Acciones del Ticket (Solo si NO está cancelado) -->
+        @if($ticket->status === 'pendiente' && $ticket->status !== 'cancelado')
             <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg font-semibold text-gray-900">Acciones</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Acciones de Asignación</h3>
                 </div>
                 
                 <div class="p-6">
                     <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}">
                         @csrf
-                        <button type="submit" 
-                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Asignar a Mí
-                        </button>
+                        
+                        @if(auth()->user()->isAdmin())
+                            <!-- Formulario para Admin: Seleccionar usuario de almacén -->
+                            <div class="mb-4">
+                                <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user-tie text-blue-600 mr-2"></i>
+                                    Asignar ticket a:
+                                </label>
+                                <select id="assigned_to" 
+                                        name="assigned_to" 
+                                        required
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                    <option value="">-- Seleccionar personal de almacén --</option>
+                                    @foreach($almacenUsers as $user)
+                                        <option value="{{ $user->id }}">
+                                            {{ $user->name }} ({{ $user->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Asignar Ticket
+                            </button>
+                        @else
+                            <!-- Formulario para Personal de Almacén: Auto-asignación -->
+                            <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <p class="text-sm text-blue-800 mb-2">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Este ticket se asignará a ti automáticamente.
+                                </p>
+                                <p class="text-xs text-blue-600">
+                                    <strong>Responsable:</strong> {{ auth()->user()->name }}
+                                </p>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Asignar a Mí
+                            </button>
+                        @endif
                     </form>
                 </div>
             </div>
         @endif
 
-        <!-- Formulario para Completar (Solo si está asignado al usuario y no completado) -->
-        @if($ticket->assigned_to === auth()->id() && $ticket->status !== 'completado')
+        <!-- Formulario para Completar (Solo si está asignado al usuario, no completado y no cancelado) -->
+        @if($ticket->assigned_to === auth()->id() && $ticket->status !== 'completado' && $ticket->status !== 'cancelado')
 
         <!-- Mensajes de Error -->
         @if($errors->any())

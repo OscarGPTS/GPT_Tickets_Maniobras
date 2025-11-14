@@ -4,31 +4,53 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto">
-    <!-- Header con acciones -->
-    <div class="mb-6 sm:flex sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                Mis Solicitudes de Movimiento
-            </h1>
-            <p class="mt-2 text-sm text-gray-600">
-                <i class="fas fa-info-circle mr-1"></i>
-                Gestiona y realiza seguimiento de tus tickets de carga
-            </p>
-        </div>
-        <div class="mt-4 sm:mt-0">
-            <a href="{{ route('tickets.create') }}" 
-               class="inline-flex items-center px-5 py-3 border border-transparent shadow-lg text-base font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Nueva Solicitud
-            </a>
-        </div>
+    <!-- Header con saludo -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">
+            ¡Hola, {{ Auth::user()->name }}! 👋
+        </h1>
+        <p class="mt-1 text-sm text-gray-500">
+            Bienvenido a tu panel de tickets de movimiento de carga
+        </p>
     </div>
+
+    <!-- Widget de nueva solicitud o alerta de encuestas -->
+    @if($canCreateTicket)
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold mb-2">¿Necesitas mover carga?</h3>
+                    <p class="text-indigo-100">Crea una nueva solicitud y nuestro equipo de almacén la atenderá lo antes posible.</p>
+                </div>
+                <a href="{{ route('solicitante.tickets.create') }}" 
+                   class="inline-flex items-center px-6 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50 transition-colors shadow-md ml-4">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nueva Solicitud
+                </a>
+            </div>
+        </div>
+    @else
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-700">
+                        <span class="font-medium">Tienes encuestas pendientes.</span> 
+                        Por favor completa las encuestas de tus tickets finalizados antes de crear nuevas solicitudes.
+                    </p>
+                    <a href="#pending-surveys" class="text-sm font-medium text-yellow-800 hover:text-yellow-900 underline mt-1 inline-block">
+                        Ver encuestas pendientes →
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Estadísticas rápidas -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-        <a href="{{ route('tickets.index') }}" 
+        <a href="{{ route('solicitante.tickets.index') }}" 
            class="bg-white rounded-lg shadow-sm border-2 {{ request('status') === null ? 'border-indigo-500' : 'border-gray-200' }} p-4 hover:shadow-md transition-all duration-200 transform hover:scale-105">
             <div class="flex items-center justify-between">
                 <div>
@@ -41,7 +63,7 @@
             </div>
         </a>
         
-        <a href="{{ route('tickets.index', ['status' => 'pendiente']) }}" 
+        <a href="{{ route('solicitante.tickets.index', ['status' => 'pendiente']) }}" 
            class="bg-white rounded-lg shadow-sm border-2 {{ request('status') === 'pendiente' ? 'border-yellow-500' : 'border-gray-200' }} p-4 hover:shadow-md transition-all duration-200 transform hover:scale-105">
             <div class="flex items-center justify-between">
                 <div>
@@ -54,7 +76,7 @@
             </div>
         </a>
         
-        <a href="{{ route('tickets.index', ['status' => 'en_proceso']) }}" 
+        <a href="{{ route('solicitante.tickets.index', ['status' => 'en_proceso']) }}" 
            class="bg-white rounded-lg shadow-sm border-2 {{ request('status') === 'en_proceso' ? 'border-blue-500' : 'border-gray-200' }} p-4 hover:shadow-md transition-all duration-200 transform hover:scale-105">
             <div class="flex items-center justify-between">
                 <div>
@@ -67,7 +89,7 @@
             </div>
         </a>
         
-        <a href="{{ route('tickets.index', ['status' => 'finalizado']) }}" 
+        <a href="{{ route('solicitante.tickets.index', ['status' => 'finalizado']) }}" 
            class="bg-white rounded-lg shadow-sm border-2 {{ request('status') === 'finalizado' ? 'border-green-500' : 'border-gray-200' }} p-4 hover:shadow-md transition-all duration-200 transform hover:scale-105">
             <div class="flex items-center justify-between">
                 <div>
@@ -80,7 +102,7 @@
             </div>
         </a>
         
-        <a href="{{ route('tickets.index', ['status' => 'cancelado']) }}" 
+        <a href="{{ route('solicitante.tickets.index', ['status' => 'cancelado']) }}" 
            class="bg-white rounded-lg shadow-sm border-2 {{ request('status') === 'cancelado' ? 'border-red-500' : 'border-gray-200' }} p-4 hover:shadow-md transition-all duration-200 transform hover:scale-105">
             <div class="flex items-center justify-between">
                 <div>
@@ -262,12 +284,11 @@
                                 <!-- Acciones -->
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center space-x-2">
-                                        <a href="{{ route('tickets.show', $ticket) }}" 
+                                        <a href="{{ route('solicitante.tickets.show', $ticket) }}" 
                                            class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-md shadow-sm transition-colors duration-150"
                                            title="Ver detalles">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        
                                     </div>
                                 </td>
                             </tr>
@@ -317,7 +338,7 @@
                 @endif
             </p>
             @if(!request('status'))
-                <a href="{{ route('tickets.create') }}" 
+                <a href="{{ route('solicitante.tickets.create') }}" 
                    class="inline-flex items-center px-6 py-3 border border-transparent shadow-lg text-base font-medium rounded-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -325,7 +346,7 @@
                     Crear Primera Solicitud
                 </a>
             @else
-                <a href="{{ route('tickets.index') }}" 
+                <a href="{{ route('solicitante.tickets.index') }}" 
                    class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Ver todos los tickets
@@ -335,175 +356,46 @@
     @endif
 </div>
 
-<!-- Modal de cancelación -->
-<div id="cancelModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">Cancelar Ticket</h3>
-                <button onclick="closeCancelModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
+<!-- Encuestas pendientes -->
+@if($pendingSurveys->count() > 0)
+    <div id="pending-surveys" class="mt-8">
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <div class="flex items-center mb-4">
+                <span class="bg-yellow-100 text-yellow-800 rounded-full p-2 mr-3">
+                    <i class="fas fa-star"></i>
+                </span>
+                <h2 class="text-xl font-bold text-gray-900">
+                    Encuestas Pendientes
+                    <span class="ml-2 text-sm font-normal text-gray-600">({{ $pendingSurveys->count() }})</span>
+                </h2>
             </div>
-            <form id="cancelForm" method="POST">
-                @csrf
-                <div class="mb-4">
-                    <label for="cancellation_reason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Razón de cancelación <span class="text-red-500">*</span>
-                    </label>
-                    <textarea name="cancellation_reason" id="cancellation_reason" rows="4" 
-                             class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                             placeholder="Explica brevemente por qué cancelas este ticket..."
-                             required></textarea>
-                </div>
-                <div class="flex items-center justify-end space-x-3">
-                    <button type="button" onclick="closeCancelModal()"
-                            class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        Cancelar
-                    </button>
-                    <button type="submit"
-                            class="px-4 py-2 bg-red-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-red-700">
-                        Confirmar Cancelación
-                    </button>
-                </div>
-            </form>
+            <p class="text-sm text-gray-700 mb-4">
+                Por favor califica los siguientes servicios para poder crear nuevas solicitudes:
+            </p>
+            <div class="space-y-3">
+                @foreach($pendingSurveys as $survey)
+                    <div class="bg-white rounded-lg border border-yellow-200 p-4 flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900">
+                                Ticket #{{ $survey->ticket->id }} - {{ Str::limit($survey->ticket->title, 60) }}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                                Completado por {{ $survey->ticket->assignedTo->name }}
+                            </p>
+                        </div>
+                        <a href="{{ route('solicitante.tickets.show', $survey->ticket) }}#survey-form" 
+                           class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors">
+                            <i class="fas fa-star mr-2"></i>
+                            Calificar Ahora
+                        </a>
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
+@endif
 </div>
 
-@push('scripts')
-<script>
-function openCancelModal(ticketId) {
-    const form = document.getElementById('cancelForm');
-    form.action = `/tickets/${ticketId}/cancel`;
-    document.getElementById('cancelModal').classList.remove('hidden');
-    // Añadir animación de entrada
-    setTimeout(() => {
-        document.querySelector('#cancelModal > div').classList.add('scale-100', 'opacity-100');
-    }, 10);
-}
-
-function closeCancelModal() {
-    // Animación de salida
-    document.querySelector('#cancelModal > div').classList.remove('scale-100', 'opacity-100');
-    setTimeout(() => {
-        document.getElementById('cancelModal').classList.add('hidden');
-        document.getElementById('cancellation_reason').value = '';
-    }, 200);
-}
-
-// Cerrar modal al hacer clic fuera
-document.getElementById('cancelModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeCancelModal();
-    }
-});
-
-// Cerrar modal con tecla Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeCancelModal();
-    }
-});
-
-// Añadir efecto de highlight a filas nuevas (últimas 24 horas)
-document.addEventListener('DOMContentLoaded', function() {
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach((row, index) => {
-        // Efecto de entrada escalonado
-        setTimeout(() => {
-            row.style.opacity = '1';
-            row.style.transform = 'translateY(0)';
-        }, index * 50);
-    });
-});
-</script>
-
-<style>
-    /* Animaciones para las filas de la tabla */
-    tbody tr {
-        opacity: 0;
-        transform: translateY(10px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
-    }
-    
-    /* Animación del modal */
-    #cancelModal > div {
-        transform: scale(0.95);
-        opacity: 0;
-        transition: all 0.2s ease-out;
-    }
-    
-    /* Efecto de hover en filas */
-    tbody tr:hover {
-        transform: translateX(4px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-    
-    /* Badges con efecto pulsante para estados activos */
-    .bg-yellow-100.animate-pulse,
-    .bg-blue-100 .fa-pulse {
-        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    /* Mejora visual de los estados */
-    .status-badge {
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .status-badge::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        transition: left 0.5s;
-    }
-    
-    .status-badge:hover::before {
-        left: 100%;
-    }
-
-    /* Línea de tiempo vertical para estados */
-    .timeline-indicator {
-        position: relative;
-        padding-left: 1rem;
-    }
-
-    .timeline-indicator::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0.5rem;
-        bottom: 0.5rem;
-        width: 2px;
-        background: linear-gradient(to bottom, #10B981, #3B82F6);
-    }
-    
-    /* Efecto de carga en la paginación */
-    .pagination a {
-        transition: all 0.2s ease;
-    }
-    
-    .pagination a:hover {
-        transform: translateY(-2px);
-    }
-
-    /* Indicador visual para tickets recientes (últimas 24h) */
-    tr.is-new {
-        background: linear-gradient(to right, rgba(99, 102, 241, 0.03), transparent);
-        border-left: 3px solid #6366f1;
-    }
-
-    /* Responsive: ocultar columnas menos importantes en móviles */
-    @media (max-width: 768px) {
-        .hide-mobile {
-            display: none;
-        }
-    }
-</style>
-@endpush
 @endsection
+
+

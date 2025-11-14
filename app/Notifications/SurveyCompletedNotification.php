@@ -29,7 +29,8 @@ class SurveyCompletedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        // return ['mail', 'database']; // Descomentar para activar emails
+        return ['database']; // Solo base de datos por ahora
     }
 
     /**
@@ -37,21 +38,13 @@ class SurveyCompletedNotification extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        $ticket = $this->survey->ticket;
-        $rating = $this->survey->rating;
-        $stars = str_repeat('⭐', $rating);
-
         return (new MailMessage)
-            ->subject('Nueva Calificación Recibida - Ticket #' . $ticket->id)
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('Has recibido una nueva calificación por el trabajo realizado.')
-            ->line('**Ticket #' . $ticket->id . ':** ' . $ticket->title)
-            ->line('**Calificación:** ' . $stars . ' (' . $rating . '/5)')
-            ->line('**Comentarios:** ' . ($this->survey->feedback ?? 'Sin comentarios'))
-            ->line('**Calificado por:** ' . $ticket->user->name)
-            ->action('Ver Ticket', route('almacen.tickets.show', $ticket))
-            ->line('¡Sigue con el excelente trabajo!')
-            ->salutation('Saludos, ' . config('app.name'));
+            ->subject('Ticket calificado #' . $this->survey->ticket->id)
+            ->view('emails.tickets.survey-completed', [
+                'ticket' => $this->survey->ticket,
+                'survey' => $this->survey,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

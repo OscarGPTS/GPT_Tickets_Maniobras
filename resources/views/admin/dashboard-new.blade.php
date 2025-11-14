@@ -25,6 +25,124 @@
         </div>
     </div>
 
+    <!-- SECCIÓN PRINCIPAL: Tickets Pendientes de Autorización -->
+    <div class="mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-orange-50 to-red-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center mr-3">
+                            <i class="fas fa-exclamation-circle text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-900">Tickets Pendientes de Autorización</h3>
+                            <p class="text-sm text-gray-600 mt-1">Tickets sin asignar que requieren atención inmediata</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="inline-flex items-center px-4 py-2 bg-orange-600 text-white text-lg font-bold rounded-full">
+                            {{ $pendingTickets->count() }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                @if($pendingTickets->count() > 0)
+                    <div class="space-y-4">
+                        @foreach($pendingTickets as $ticket)
+                            <div class="border border-orange-200 rounded-lg p-5 bg-gradient-to-r from-orange-50 to-yellow-50 hover:shadow-md transition-shadow">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-2">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-orange-600 text-white mr-3">
+                                                PENDIENTE
+                                            </span>
+                                            <span class="text-sm font-semibold text-gray-700">
+                                                Ticket #{{ $ticket->id }}
+                                            </span>
+                                            <span class="text-sm text-gray-500 ml-3">
+                                                <i class="far fa-clock mr-1"></i>
+                                                {{ $ticket->created_at->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        
+                                        <h4 class="text-lg font-bold text-gray-900 mb-2">{{ $ticket->title }}</h4>
+                                        
+                                        <p class="text-sm text-gray-700 mb-3">{{ Str::limit($ticket->description, 200) }}</p>
+                                        
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-user text-blue-600 mr-2"></i>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Solicitante</p>
+                                                    <p class="font-semibold text-gray-900">{{ $ticket->user->name }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-envelope text-green-600 mr-2"></i>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Email</p>
+                                                    <p class="font-medium text-gray-700 text-xs">{{ $ticket->user->email }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-map-marker-alt text-purple-600 mr-2"></i>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Origen</p>
+                                                    <p class="font-medium text-gray-900">{{ $ticket->origin }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-map-marker-alt text-red-600 mr-2"></i>
+                                                <div>
+                                                    <p class="text-xs text-gray-500">Destino</p>
+                                                    <p class="font-medium text-gray-900">{{ $ticket->destination }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="ml-6 flex flex-col space-y-2">
+                                        <a href="{{ route('almacen.tickets.show', $ticket) }}" 
+                                           class="inline-flex items-center justify-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-colors shadow-sm">
+                                            <i class="fas fa-eye mr-2"></i>
+                                            Ver Detalles
+                                        </a>
+                                        <button type="button"
+                                                onclick="openAssignModal({{ $ticket->id }}, '{{ addslashes($ticket->title) }}')"
+                                                class="inline-flex items-center justify-center px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors shadow-sm">
+                                            <i class="fas fa-user-check mr-2"></i>
+                                            Asignar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    
+                    @if($pendingTickets->count() >= 5)
+                        <div class="mt-6 text-center">
+                            <a href="{{ route('almacen.tickets.pending') }}" 
+                               class="inline-flex items-center px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition-colors shadow-md">
+                                <i class="fas fa-list mr-2"></i>
+                                Ver Todos los Tickets Pendientes
+                            </a>
+                        </div>
+                    @endif
+                @else
+                    <div class="text-center py-12">
+                        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
+                            <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">¡Todo al día!</h3>
+                        <p class="text-gray-600">No hay tickets pendientes de autorización en este momento.</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Estadísticas Principales con Gradientes -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <!-- Total Usuarios -->
@@ -115,7 +233,7 @@
             </a>
 
             <!-- Ver Tickets -->
-            <a href="{{ route('tickets.index') }}" class="group flex items-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg hover:from-purple-100 hover:to-purple-200 transition-all transform hover:scale-105">
+            <a href="{{ route('almacen.tickets.pending') }}" class="group flex items-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg hover:from-purple-100 hover:to-purple-200 transition-all transform hover:scale-105">
                 <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3 group-hover:bg-purple-700 transition-colors">
                     <i class="fas fa-clipboard-list text-white text-lg"></i>
                 </div>
@@ -126,7 +244,7 @@
             </a>
 
             <!-- Ver Encuestas -->
-            <a href="{{ route('surveys.index') }}" class="group flex items-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg hover:from-yellow-100 hover:to-yellow-200 transition-all transform hover:scale-105">
+            <a href="{{ route('solicitante.surveys.index') }}" class="group flex items-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg hover:from-yellow-100 hover:to-yellow-200 transition-all transform hover:scale-105">
                 <div class="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center mr-3 group-hover:bg-yellow-700 transition-colors">
                     <i class="fas fa-star text-white text-lg"></i>
                 </div>
@@ -294,7 +412,7 @@
                     <i class="fas fa-ticket-alt text-purple-600 mr-2"></i>
                     Tickets Recientes
                 </h3>
-                <a href="{{ route('tickets.index') }}" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                <a href="{{ route('almacen.tickets.pending') }}" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
                     Ver todos <i class="fas fa-arrow-right ml-1"></i>
                 </a>
             </div>
@@ -508,7 +626,7 @@
                                 <div class="text-xs text-gray-400">{{ $ticket->created_at->format('H:i') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="{{ route('tickets.show', $ticket) }}" 
+                                <a href="{{ route('almacen.tickets.show', $ticket) }}" 
                                    class="inline-flex items-center px-3 py-1.5 bg-indigo-600 text-white text-xs font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                                     <i class="fas fa-eye mr-1"></i>
                                     Ver
@@ -635,6 +753,96 @@ new Chart(surveysCtx, {
                 }
             }
         }
+    }
+});
+</script>
+
+<!-- Modal de Asignación -->
+<div id="assignModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">
+                    <i class="fas fa-user-plus text-green-600 mr-2"></i>
+                    Asignar Ticket
+                </h3>
+                <button onclick="closeAssignModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Información del ticket -->
+            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-gray-600">Ticket:</p>
+                <p class="font-semibold text-gray-900" id="modalTicketTitle"></p>
+            </div>
+
+            <!-- Formulario -->
+            <form id="assignForm" method="POST" action="">
+                @csrf
+                <div class="mb-4">
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">
+                        Seleccionar responsable:
+                    </label>
+                    <select id="assigned_to" 
+                            name="assigned_to" 
+                            required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md">
+                        <option value="">-- Seleccionar personal de almacén --</option>
+                        @php
+                            $almacenUsers = \App\Models\User::role('almacen')->orderBy('name')->get();
+                        @endphp
+                        @foreach($almacenUsers as $user)
+                            <option value="{{ $user->id }}">
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="button" 
+                            onclick="closeAssignModal()"
+                            class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                        <i class="fas fa-check mr-2"></i>
+                        Asignar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAssignModal(ticketId, ticketTitle) {
+    document.getElementById('assignModal').classList.remove('hidden');
+    document.getElementById('modalTicketTitle').textContent = '#' + ticketId + ' - ' + ticketTitle;
+    document.getElementById('assignForm').action = '/almacen/tickets/' + ticketId + '/assign';
+}
+
+function closeAssignModal() {
+    document.getElementById('assignModal').classList.add('hidden');
+    document.getElementById('assigned_to').value = '';
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('assignModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAssignModal();
+    }
+});
+
+// Cerrar modal con tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAssignModal();
     }
 });
 </script>

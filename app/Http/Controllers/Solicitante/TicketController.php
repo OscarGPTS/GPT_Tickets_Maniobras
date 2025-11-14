@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Solicitante;
 
+use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketImage;
 use App\Models\User;
-use App\Models\Survey;
 use App\Notifications\TicketCreatedNotification;
+use App\Notifications\TicketCancelledNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -17,11 +18,21 @@ use Illuminate\Support\Facades\Log;
 class TicketController extends Controller
 {
     /**
-     * Display a listing of the user's tickets.
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
+     * Listar tickets del usuario
      */
     public function index(Request $request)
     {
-        $query = Auth::user()->tickets()
+        $user = Auth::user();
+        
+        $query = $user->tickets()
             ->with(['assignedTo', 'images', 'survey'])
             ->orderBy('created_at', 'desc'); // Más recientes primero
 
@@ -33,25 +44,36 @@ class TicketController extends Controller
         // Paginación con parámetros persistentes
         $tickets = $query->paginate(20)->appends($request->except('page'));
 
-        return view('tickets.index-new', compact('tickets'));
+        // Encuestas pendientes
+        $pendingSurveys = \App\Models\Survey::whereHas('ticket', function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->whereNull('completed_at')
+        ->with('ticket.assignedTo')
+        ->get();
+
+        // Verificar si puede crear un nuevo ticket
+        $canCreateTicket = $user->canCreateTicket();
+
+        return view('solicitante.tickets.index', compact('tickets', 'pendingSurveys', 'canCreateTicket'));
     }
 
     /**
-     * Show the form for creating a new ticket.
+     * Formulario para crear ticket
      */
     public function create()
     {
         // Verificar si el usuario puede crear un nuevo ticket
         if (!Auth::user()->canCreateTicket()) {
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('error', 'Debes completar las encuestas pendientes antes de crear un nuevo ticket.');
         }
 
-        return view('tickets.create');
+        return view('solicitante.tickets.create');
     }
 
     /**
-     * Store a newly created ticket in storage.
+     * Guardar nuevo ticket
      */
     public function store(Request $request)
     {
@@ -103,11 +125,10 @@ class TicketController extends Controller
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificaciones de ticket creado: ' . $e->getMessage());
-                // No detenemos el proceso si falla la notificación
             }
             
             DB::commit();
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('success', 'Ticket creado exitosamente. Se ha notificado al equipo de almacén.');
 
         } catch (\Exception $e) {
@@ -117,22 +138,22 @@ class TicketController extends Controller
     }
 
     /**
-     * Display the specified ticket.
+     * Ver detalle de un ticket
      */
     public function show(Ticket $ticket)
     {
         // Verificar que el usuario puede ver este ticket
-        if ($ticket->user_id !== Auth::id() && !Auth::user()->isAlmacen() && !Auth::user()->isAdmin()) {
+        if ($ticket->user_id !== Auth::id()) {
             abort(403, 'No tienes permiso para ver este ticket.');
         }
 
         $ticket->load(['user', 'assignedTo', 'images', 'survey']);
 
-        return view('tickets.show', compact('ticket'));
+        return view('solicitante.tickets.show', compact('ticket'));
     }
 
     /**
-     * Show the form for editing the specified ticket.
+     * Formulario de edición
      */
     public function edit(Ticket $ticket)
     {
@@ -141,11 +162,11 @@ class TicketController extends Controller
             abort(403, 'No puedes editar este ticket.');
         }
 
-        return view('tickets.edit', compact('ticket'));
+        return view('solicitante.tickets.edit', compact('ticket'));
     }
 
     /**
-     * Update the specified ticket in storage.
+     * Actualizar ticket
      */
     public function update(Request $request, Ticket $ticket)
     {
@@ -187,7 +208,7 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return redirect()->route('tickets.show', $ticket)
+            return redirect()->route('solicitante.tickets.show', $ticket)
                 ->with('success', 'Ticket actualizado exitosamente.');
 
         } catch (\Exception $e) {
@@ -197,7 +218,7 @@ class TicketController extends Controller
     }
 
     /**
-     * Remove the specified ticket from storage.
+     * Eliminar ticket
      */
     public function destroy(Ticket $ticket)
     {
@@ -214,7 +235,7 @@ class TicketController extends Controller
 
             $ticket->delete();
 
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('success', 'Ticket eliminado exitosamente.');
 
         } catch (\Exception $e) {
@@ -261,17 +282,18 @@ class TicketController extends Controller
         }
 
         $request->validate([
-            'cancellation_reason' => 'required|string|max:500',
+            'cancellation_reason' => 'nullable|string|max:500',
         ]);
 
         DB::beginTransaction();
         try {
-            $ticket->cancel($request->cancellation_reason);
+            $cancellationReason = $request->cancellation_reason ?: 'Cancelado';
+            $ticket->cancel($cancellationReason);
 
             // Notificar al miembro de almacén si estaba asignado
             if ($ticket->assigned_to) {
                 try {
-                    $ticket->assignedTo->notify(new \App\Notifications\TicketCancelledNotification($ticket));
+                    $ticket->assignedTo->notify(new TicketCancelledNotification($ticket));
                     Log::info('Notificación de cancelación enviada al usuario #' . $ticket->assigned_to . ' para ticket #' . $ticket->id);
                 } catch (\Exception $e) {
                     Log::error('Error al enviar notificación de ticket cancelado: ' . $e->getMessage());
@@ -280,7 +302,7 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('success', 'Ticket cancelado exitosamente.');
 
         } catch (\Exception $e) {

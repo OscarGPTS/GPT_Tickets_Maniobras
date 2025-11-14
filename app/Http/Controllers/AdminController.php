@@ -43,7 +43,7 @@ class AdminController extends Controller
             'total_users' => User::count(),
             'total_tickets' => Ticket::count(),
             'pending_tickets' => Ticket::where('status', 'pendiente')->count(),
-            'in_progress_tickets' => Ticket::where('status', 'en_progreso')->count(),
+            'in_progress_tickets' => Ticket::where('status', 'en_proceso')->count(),
             'completed_tickets' => Ticket::where('status', 'finalizado')->count(),
             'total_surveys' => Survey::count(),
             'completed_surveys' => Survey::whereNotNull('completed_at')->count(),
@@ -107,12 +107,19 @@ class AdminController extends Controller
             ->take(5)
             ->get();
 
+        // Tickets pendientes de autorización (sin asignar) - PRIORIDAD
+        $pendingTickets = Ticket::with(['user'])
+            ->where('status', 'pendiente')
+            ->whereNull('assigned_to')
+            ->orderBy('created_at', 'asc')
+            ->get();
+
         // Tickets paginados (ordenados del más actual primero)
         $allTickets = Ticket::with(['user', 'assignedTo', 'survey'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('admin.dashboard-new', compact('stats', 'usersByRole', 'recentUsers', 'recentTickets', 'allTickets', 'almacenStats'));
+        return view('admin.dashboard-new', compact('stats', 'usersByRole', 'recentUsers', 'recentTickets', 'allTickets', 'almacenStats', 'pendingTickets'));
     }
 
     /**
@@ -256,7 +263,7 @@ class AdminController extends Controller
                 'total' => Ticket::count(),
                 'by_status' => [
                     'pendiente' => Ticket::where('status', 'pendiente')->count(),
-                    'en_progreso' => Ticket::where('status', 'en_progreso')->count(),
+                    'en_proceso' => Ticket::where('status', 'en_proceso')->count(),
                     'completado' => Ticket::where('status', 'completado')->count(),
                 ],
                 'this_month' => Ticket::whereMonth('created_at', now()->month)->count(),

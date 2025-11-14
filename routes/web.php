@@ -2,14 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\TicketController;
-use App\Http\Controllers\SurveyController;
-use App\Http\Controllers\AlmacenController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TestController;
-use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,103 +12,70 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [HomeController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+// Ruta raíz - Redirección según rol
+Route::get('/', [HomeController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('home');
 
+// Login
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 
-// Rutas de Google OAuth directo
+// Google OAuth
 Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle'])->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback'])->name('google.callback');
 
+// Logout
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Rutas Protegidas por Autenticación
+| Rutas por Rol
 |--------------------------------------------------------------------------
+*/
+
+// Incluir rutas de administrador
+require __DIR__.'/admin.php';
+
+// Incluir rutas de solicitante
+require __DIR__.'/solicitante.php';
+
+// Incluir rutas de almacén
+require __DIR__.'/almacen.php';
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Compatibilidad (Deprecadas)
+|--------------------------------------------------------------------------
+| Estas rutas redirigen a las nuevas rutas organizadas por rol.
+| Se mantendrán temporalmente para compatibilidad con enlaces existentes.
 */
 
 Route::middleware(['auth'])->group(function () {
     
-    // Notificaciones
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/{notification}', [NotificationController::class, 'show'])->name('notifications.show');
-    Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.mark-as-read');
-    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
-    Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
-    Route::delete('/notifications-read/delete-all', [NotificationController::class, 'deleteAllRead'])->name('notifications.delete-all-read');
+    // Dashboard (deprecated - redirige según rol)
+    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
     
-    // Tickets - Rutas para usuarios normales
-    Route::resource('tickets', TicketController::class);
-    Route::delete('/tickets/{ticket}/images/{image}', [TicketController::class, 'deleteImage'])->name('tickets.images.delete');
-    Route::post('/tickets/{ticket}/cancel', [TicketController::class, 'cancel'])->name('tickets.cancel');
+    // Tickets (deprecated - redirige a solicitante)
+    Route::redirect('/tickets', '/solicitante/tickets');
+    Route::redirect('/tickets/create', '/solicitante/tickets/create');
     
-    // Encuestas
-    Route::resource('surveys', SurveyController::class)->except(['create', 'store', 'destroy']);
-    Route::get('/surveys/pending', [SurveyController::class, 'pending'])->name('surveys.pending');
-    Route::post('/surveys/{survey}/complete', [SurveyController::class, 'completeSimple'])->name('surveys.complete');
-    Route::post('/surveys/{survey}/quick-complete', [SurveyController::class, 'quickComplete'])->name('surveys.quickComplete');
-    Route::post('/surveys/quick-complete-all', [SurveyController::class, 'quickCompleteAll'])->name('surveys.quickCompleteAll');
-
+    // Surveys (deprecated - redirige a solicitante)
+    Route::redirect('/surveys', '/solicitante/surveys');
+    Route::redirect('/surveys/pending', '/solicitante/surveys/pending');
     
 });
+
+/*
+|--------------------------------------------------------------------------
+| Rutas de Testing y Desarrollo
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/test/pdf', [TestController::class, 'testPdf'])->name('test.pdf');
 
 /*
 |--------------------------------------------------------------------------
-| Rutas del Panel de Almacén
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', 'role:almacen'])->prefix('almacen')->name('almacen.')->group(function () {
-    
-    // Dashboard del almacén
-    Route::get('/dashboard', [AlmacenController::class, 'dashboard'])->name('dashboard');
-    
-    // Tickets
-    Route::get('/tickets/pending', [AlmacenController::class, 'pendingTickets'])->name('tickets.pending');
-    Route::get('/tickets/my-tickets', [AlmacenController::class, 'myTickets'])->name('tickets.mine');
-    Route::get('/tickets/{ticket}', [AlmacenController::class, 'showTicket'])->name('tickets.show');
-    
-    // Asignación y completado de tickets
-    Route::post('/tickets/{ticket}/assign', [AlmacenController::class, 'assignTicket'])->name('tickets.assign');
-    Route::post('/tickets/{ticket}/progress', [AlmacenController::class, 'addProgress'])->name('tickets.progress');
-    Route::post('/tickets/{ticket}/complete', [AlmacenController::class, 'completeTicket'])->name('tickets.complete');
-    
-    // Estadísticas
-    Route::get('/statistics', [AlmacenController::class, 'statistics'])->name('statistics');
-    
-});
-
-/*
-|--------------------------------------------------------------------------
-| Rutas del Panel de Administración
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    
-    // Dashboard de administración
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
-    
-    // Gestión de usuarios
-    Route::get('/users', [AdminController::class, 'users'])->name('users.index');
-    Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
-    Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
-    Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.delete');
-    
-    // Asignación de roles (AJAX)
-    Route::post('/users/{user}/assign-role', [AdminController::class, 'assignRole'])->name('users.assign-role');
-    
-    // Estadísticas avanzadas
-    Route::get('/statistics', [AdminController::class, 'statistics'])->name('statistics');
-    
-});
-
-/*
-|--------------------------------------------------------------------------
-| API Routes (si se necesitan)
+| API Routes
 |--------------------------------------------------------------------------
 */
 

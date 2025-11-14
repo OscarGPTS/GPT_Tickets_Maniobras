@@ -51,7 +51,7 @@
                     </div>
                     <div class="ml-4">
                         <p class="text-sm font-medium text-gray-500">En Progreso</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('assigned_to', auth()->id())->where('status', 'en_progreso')->count() }}</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('assigned_to', auth()->id())->where('status', 'en_proceso')->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -105,10 +105,11 @@
                                     <h4 class="text-lg font-semibold text-gray-900">
                                         #{{ $ticket->id }} - {{ $ticket->title }}
                                     </h4>
-                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
+                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                                         @if($ticket->status === 'completado') bg-green-100 text-green-800
-                                        @elseif($ticket->status === 'en_progreso') bg-blue-100 text-blue-800
-                                        @else bg-gray-100 text-gray-800 @endif">
+                                        @elseif($ticket->status === 'en_proceso') bg-blue-100 text-blue-800
+                                        @elseif($ticket->status === 'cancelado') bg-red-100 text-red-800
+                                        @else bg-yellow-100 text-yellow-800 @endif">
                                         {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                                     </span>
                                     @if($ticket->priority === 'alta')
@@ -169,7 +170,7 @@
                                     Ver Detalles
                                 </a>
                                 
-                                @if($ticket->status !== 'completado')
+                                @if($ticket->status !== 'completado' && $ticket->status !== 'cancelado')
                                     <a href="{{ route('almacen.tickets.show', $ticket) }}" 
                                        class="inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,7 +178,7 @@
                                         </svg>
                                         Completar
                                     </a>
-                                @else
+                                @elseif($ticket->status === 'completado')
                                     <div class="inline-flex items-center px-3 py-2 bg-green-100 text-green-800 rounded-md text-sm font-medium">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>

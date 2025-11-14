@@ -3,287 +3,225 @@
 @section('title', 'Panel de Almacén')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <!-- Header -->
-        <div class="mb-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Panel de Almacén</h1>
-                        <p class="text-gray-600 mt-2">Gestiona los tickets asignados y supervisa el flujo de trabajo</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">Bienvenido</p>
-                        <p class="text-lg font-semibold text-gray-900">{{ auth()->user()->name }}</p>
-                    </div>
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Panel de Almacén</h1>
+        <p class="mt-1 text-sm text-gray-500">
+            Gestiona y responde a las solicitudes de servicio
+        </p>
+    </div>
+
+    <!-- Métricas rápidas -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <!-- Pendientes -->
+        <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg shadow-md p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-yellow-100 text-sm font-medium uppercase tracking-wide">Pendientes</p>
+                    <p class="text-4xl font-bold mt-2">{{ $pendingTickets->count() }}</p>
+                    <p class="text-yellow-100 text-sm mt-1">Esperando asignación</p>
                 </div>
+                <div class="bg-yellow-500 bg-opacity-30 rounded-full p-4">
+                    <i class="fas fa-clock text-3xl"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <a href="#pendingTickets" class="text-white text-sm font-medium hover:text-yellow-100 flex items-center">
+                    Ver todos <i class="fas fa-arrow-right ml-2"></i>
+                </a>
             </div>
         </div>
 
-        <!-- Estadísticas Principales -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            
-            <!-- Tickets Pendientes -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Tickets Pendientes</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'pendiente')->count() }}</p>
-                    </div>
+        <!-- En proceso -->
+        <div class="bg-gradient-to-br from-blue-400 to-indigo-600 rounded-lg shadow-md p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm font-medium uppercase tracking-wide">En Proceso</p>
+                    <p class="text-4xl font-bold mt-2">{{ $myTickets->count() }}</p>
+                    <p class="text-blue-100 text-sm mt-1">Asignados a ti</p>
+                </div>
+                <div class="bg-blue-500 bg-opacity-30 rounded-full p-4">
+                    <i class="fas fa-tasks text-3xl"></i>
                 </div>
             </div>
-
-            <!-- Tickets Asignados a Mí -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Mis Tickets</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('assigned_to', auth()->id())->count() }}</p>
-                    </div>
-                </div>
+            <div class="mt-4">
+                <a href="#myTickets" class="text-white text-sm font-medium hover:text-blue-100 flex items-center">
+                    Ver mis tickets <i class="fas fa-arrow-right ml-2"></i>
+                </a>
             </div>
-
-            <!-- En Progreso -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">En Progreso</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'en_progreso')->count() }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Completados Hoy -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Completados Hoy</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'completado')->whereDate('updated_at', today())->count() }}</p>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Grid de Contenido Principal -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            
-            <!-- Panel Izquierdo - Tickets Pendientes -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Tickets Pendientes</h3>
-                        <a href="{{ route('almacen.tickets.pending') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                            Ver todos →
-                        </a>
-                    </div>
+        <!-- Completados hoy -->
+        <div class="bg-gradient-to-br from-green-400 to-emerald-600 rounded-lg shadow-md p-6 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm font-medium uppercase tracking-wide">Completados Hoy</p>
+                    <p class="text-4xl font-bold mt-2">{{ $completedToday }}</p>
+                    <p class="text-green-100 text-sm mt-1">¡Buen trabajo!</p>
                 </div>
-                
-                <div class="p-6">
-                    @php
-                        $pendingTickets = \App\Models\Ticket::where('status', 'pendiente')
-                            ->with(['user'])
-                            ->orderBy('created_at', 'desc')
-                            ->take(5)
-                            ->get();
-                    @endphp
-                    
-                    <div class="space-y-4">
-                        @forelse($pendingTickets as $ticket)
-                            <div class="border-l-4 border-yellow-400 bg-yellow-50 p-4 rounded-r-lg">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-sm font-medium text-gray-900">
-                                        #{{ $ticket->id }} - {{ Str::limit($ticket->title, 30) }}
-                                    </h4>
-                                    <span class="text-xs text-gray-500">{{ $ticket->created_at->diffForHumans() }}</span>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-2">{{ Str::limit($ticket->description, 60) }}</p>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500">Por: {{ $ticket->user->name }}</span>
-                                    <div class="flex space-x-2">
-                                        <a href="{{ route('almacen.tickets.show', $ticket) }}" 
-                                           class="text-blue-600 hover:text-blue-700 text-xs">Ver</a>
-                                        <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}" class="inline">
-                                            @csrf
-                                            <button type="submit" class="text-green-600 hover:text-green-700 text-xs">
-                                                Asignar a mí
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-center py-6">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900">¡Excelente!</h3>
-                                <p class="mt-1 text-sm text-gray-500">No hay tickets pendientes por asignar</p>
-                            </div>
-                        @endforelse
-                    </div>
+                <div class="bg-green-500 bg-opacity-30 rounded-full p-4">
+                    <i class="fas fa-check-circle text-3xl"></i>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Panel Derecho - Mis Tickets -->
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">Mis Tickets Asignados</h3>
-                        <a href="{{ route('almacen.tickets.mine') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                            Ver todos →
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="p-6">
-                    @php
-                        $myTickets = \App\Models\Ticket::where('assigned_to', auth()->id())
-                            ->with(['user'])
-                            ->orderBy('updated_at', 'desc')
-                            ->take(5)
-                            ->get();
-                    @endphp
-                    
-                    <div class="space-y-4">
-                        @forelse($myTickets as $ticket)
-                            <div class="border-l-4 
-                                @if($ticket->status === 'completado') border-green-400 bg-green-50
-                                @elseif($ticket->status === 'en_progreso') border-blue-400 bg-blue-50
-                                @else border-gray-400 bg-gray-50 @endif 
-                                p-4 rounded-r-lg">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="text-sm font-medium text-gray-900">
-                                        #{{ $ticket->id }} - {{ Str::limit($ticket->title, 30) }}
-                                    </h4>
-                                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
-                                        @if($ticket->status === 'completado') bg-green-100 text-green-800
-                                        @elseif($ticket->status === 'en_progreso') bg-blue-100 text-blue-800
-                                        @else bg-gray-100 text-gray-800 @endif">
-                                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                    </span>
-                                </div>
-                                <p class="text-sm text-gray-600 mb-2">{{ Str::limit($ticket->description, 60) }}</p>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs text-gray-500">Por: {{ $ticket->user->name }}</span>
-                                    <div class="flex space-x-2">
-                                        <a href="{{ route('almacen.tickets.show', $ticket) }}" 
-                                           class="text-blue-600 hover:text-blue-700 text-xs">Ver</a>
-                                        @if($ticket->status !== 'completado')
-                                            <a href="{{ route('almacen.tickets.show', $ticket) }}" 
-                                               class="text-green-600 hover:text-green-700 text-xs">Completar</a>
+    <!-- Tickets Pendientes -->
+    <div id="pendingTickets" class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                <span class="bg-yellow-100 text-yellow-800 rounded-full p-2 mr-3">
+                    <i class="fas fa-inbox"></i>
+                </span>
+                Tickets Pendientes
+                <span class="ml-3 text-sm font-normal text-gray-500">({{ $pendingTickets->count() }})</span>
+            </h2>
+        </div>
+
+        @if($pendingTickets->count() > 0)
+            <div class="grid gap-4">
+                @foreach($pendingTickets as $ticket)
+                    <div class="bg-white rounded-lg shadow-sm border-l-4 border-yellow-400 hover:shadow-md transition-shadow duration-200">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 uppercase">
+                                            <i class="fas fa-exclamation-circle mr-2"></i>
+                                            Nuevo
+                                        </span>
+                                        <span class="text-sm text-gray-500">
+                                            <i class="far fa-clock mr-1"></i>
+                                            {{ $ticket->created_at->diffForHumans() }}
+                                        </span>
+                                        @if($ticket->solicitudImages->count() > 0)
+                                            <span class="text-sm text-gray-500">
+                                                <i class="fas fa-camera mr-1"></i>
+                                                {{ $ticket->solicitudImages->count() }} fotos
+                                            </span>
                                         @endif
                                     </div>
+                                    
+                                    <h3 class="text-lg font-bold text-gray-900 mb-2">
+                                        <span class="text-indigo-600">#{{ $ticket->id }}</span> - {{ $ticket->title }}
+                                    </h3>
+                                    
+                                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                        {{ $ticket->description }}
+                                    </p>
+                                    
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <img class="h-6 w-6 rounded-full mr-2" src="{{ $ticket->user->getAvatarUrl() }}" alt="">
+                                        <span class="font-medium">{{ $ticket->user->name }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex flex-col space-y-2 ml-4">
+                                    <a href="{{ route('almacen.tickets.show', $ticket) }}" 
+                                       class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                        <i class="fas fa-eye mr-2"></i>
+                                        Ver Detalles
+                                    </a>
+                                    <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}" class="inline">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-600 shadow-sm text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                            <i class="fas fa-hand-pointer mr-2"></i>
+                                            Tomar Ticket
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
-                        @empty
-                            <div class="text-center py-6">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                                <h3 class="mt-2 text-sm font-medium text-gray-900">Sin tickets asignados</h3>
-                                <p class="mt-1 text-sm text-gray-500">No tienes tickets asignados actualmente</p>
-                            </div>
-                        @endforelse
+                        </div>
                     </div>
-                </div>
+                @endforeach
             </div>
+        @else
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                <div class="text-gray-400 mb-3">
+                    <i class="fas fa-check-double text-5xl"></i>
+                </div>
+                <p class="text-gray-600">¡No hay tickets pendientes! Todo está al día.</p>
+            </div>
+        @endif
+    </div>
 
+    <!-- Mis Tickets -->
+    <div id="myTickets" class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-bold text-gray-900 flex items-center">
+                <span class="bg-blue-100 text-blue-800 rounded-full p-2 mr-3">
+                    <i class="fas fa-user-check"></i>
+                </span>
+                Mis Tickets en Proceso
+                <span class="ml-3 text-sm font-normal text-gray-500">({{ $myTickets->count() }})</span>
+            </h2>
+            <a href="{{ route('almacen.tickets.mine') }}" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                Ver todos <i class="fas fa-arrow-right ml-1"></i>
+            </a>
         </div>
 
-        <!-- Acciones Rápidas -->
-        <div class="mt-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Acciones Rápidas</h3>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    
-                    <!-- Ver Tickets Pendientes -->
-                    <a href="{{ route('almacen.tickets.pending') }}" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
-                        <div class="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+        @if($myTickets->count() > 0)
+            <div class="grid gap-4">
+                @foreach($myTickets as $ticket)
+                    <div class="bg-white rounded-lg shadow-sm border-l-4 border-blue-400 hover:shadow-md transition-shadow duration-200">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center space-x-3 mb-3">
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 uppercase">
+                                            <i class="fas fa-spinner mr-2"></i>
+                                            En Proceso
+                                        </span>
+                                        <span class="text-sm text-gray-500">
+                                            <i class="far fa-clock mr-1"></i>
+                                            Asignado {{ $ticket->assigned_at->diffForHumans() }}
+                                        </span>
+                                        @if($ticket->images->count() > 0)
+                                            <span class="text-sm text-gray-500">
+                                                <i class="fas fa-images mr-1"></i>
+                                                {{ $ticket->images->count() }} fotos
+                                            </span>
+                                        @endif
+                                    </div>
+                                    
+                                    <h3 class="text-lg font-bold text-gray-900 mb-2">
+                                        <span class="text-indigo-600">#{{ $ticket->id }}</span> - {{ $ticket->title }}
+                                    </h3>
+                                    
+                                    <p class="text-sm text-gray-600 mb-3 line-clamp-2">
+                                        {{ $ticket->description }}
+                                    </p>
+                                    
+                                    <div class="flex items-center text-sm text-gray-500">
+                                        <img class="h-6 w-6 rounded-full mr-2" src="{{ $ticket->user->getAvatarUrl() }}" alt="">
+                                        <span class="font-medium">Solicitado por: {{ $ticket->user->name }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="ml-4">
+                                    <a href="{{ route('almacen.tickets.show', $ticket) }}" 
+                                       class="inline-flex items-center justify-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        <i class="fas fa-tools mr-2"></i>
+                                        Trabajar en Ticket
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Tickets Pendientes</p>
-                            <p class="text-xs text-gray-600">Asignar y gestionar</p>
-                        </div>
-                    </a>
-
-                    <!-- Mis Tickets -->
-                    <a href="{{ route('almacen.tickets.mine') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                        <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Mis Tickets</p>
-                            <p class="text-xs text-gray-600">Ver asignados</p>
-                        </div>
-                    </a>
-
-                    <!-- Estadísticas -->
-                    <a href="{{ route('almacen.statistics') }}" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                        <div class="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Estadísticas</p>
-                            <p class="text-xs text-gray-600">Ver rendimiento</p>
-                        </div>
-                    </a>
-
-                    <!-- Todos los Tickets -->
-                    <a href="{{ route('tickets.index') }}" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
-                        <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">Todos los Tickets</p>
-                            <p class="text-xs text-gray-600">Vista general</p>
-                        </div>
-                    </a>
-
-                </div>
+                    </div>
+                @endforeach
             </div>
-        </div>
-
+        @else
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+                <div class="text-gray-400 mb-3">
+                    <i class="fas fa-clipboard-list text-5xl"></i>
+                </div>
+                <p class="text-gray-600">No tienes tickets asignados en este momento.</p>
+                <p class="text-sm text-gray-500 mt-2">Toma un ticket pendiente para comenzar a trabajar.</p>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
+
