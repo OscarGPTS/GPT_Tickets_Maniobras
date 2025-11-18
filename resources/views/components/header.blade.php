@@ -4,12 +4,12 @@
             <!-- Logo y Navegación Principal -->
             <div class="flex items-center">
                 <div class="flex-shrink-0">
-                    <a href="{{ route('dashboard') }}" class="flex items-center">
+                    <a href="{{ route('home') }}" class="flex items-center">
                         <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-lg">
                             <i class="fas fa-ticket-alt text-white text-xl"></i>
                         </div>
                         <span class="ml-3 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                            Sistema de Tickets
+                            Sistema de Tickets de Cargas
                         </span>
                     </a>
                 </div>
@@ -18,9 +18,9 @@
                 <div class="hidden md:block ml-10">
                     <div class="flex items-center space-x-1">
                         @auth
-                            <a href="{{ route('dashboard') }}" 
-                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('dashboard') || request()->routeIs('solicitante.dashboard') || request()->routeIs('almacen.dashboard') || request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600' }}">
-                                <i class="fas fa-home mr-2 {{ request()->routeIs('dashboard') || request()->routeIs('*.dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500' }}"></i>
+                            <a href="{{ route('home') }}" 
+                               class="group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 {{ request()->routeIs('home') || request()->routeIs('solicitante.dashboard') || request()->routeIs('almacen.dashboard') || request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600' }}">
+                                <i class="fas fa-home mr-2 {{ request()->routeIs('home') || request()->routeIs('*.dashboard') ? 'text-indigo-600' : 'text-gray-400 group-hover:text-indigo-500' }}"></i>
                                 Dashboard
                             </a>
                             
@@ -173,7 +173,7 @@
                                     @endif
                                 </a>
                                 
-                                <a href="{{ route('dashboard') }}" 
+                                <a href="{{ route('home') }}" 
                                    class="group flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
                                    role="menuitem">
                                     <i class="fas fa-user-circle mr-3 text-gray-400 group-hover:text-indigo-500"></i>

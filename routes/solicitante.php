@@ -12,11 +12,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 |
 | Rutas específicas para usuarios con rol de solicitante.
-| Todas estas rutas requieren autenticación.
+| Incluye middleware de autenticación y verificación de rol.
 |
 */
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:solicitante'])
     ->prefix('solicitante')
     ->name('solicitante.')
     ->group(function () {

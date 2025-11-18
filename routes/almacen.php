@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth'])
+Route::middleware(['auth', 'role:almacen'])
     ->prefix('almacen')
     ->name('almacen.')
     ->group(function () {

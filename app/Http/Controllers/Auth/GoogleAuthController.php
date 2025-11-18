@@ -66,6 +66,6 @@ class GoogleAuthController extends Controller
     private function redirectByRole(User $user)
     {
         // Redirigir a la ruta raíz que maneja la lógica de roles
-        return redirect()->route('dashboard');
+        return redirect()->route('home');
     }
 }

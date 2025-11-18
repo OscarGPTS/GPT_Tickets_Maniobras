@@ -193,6 +193,20 @@ class Ticket extends Model
     }
 
     /**
+     * Obtener el porcentaje de progreso del ticket
+     */
+    public function getProgressPercentage(): int
+    {
+        return match($this->status) {
+            self::STATUS_PENDIENTE => 25,
+            self::STATUS_EN_PROCESO => 50,
+            self::STATUS_FINALIZADO => 100,
+            self::STATUS_CANCELADO => 50,
+            default => 0,
+        };
+    }
+
+    /**
      * Obtener el texto del estado
      */
     public function getStatusText(): string

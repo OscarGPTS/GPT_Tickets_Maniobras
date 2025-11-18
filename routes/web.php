@@ -44,29 +44,6 @@ require __DIR__.'/almacen.php';
 
 /*
 |--------------------------------------------------------------------------
-| Rutas de Compatibilidad (Deprecadas)
-|--------------------------------------------------------------------------
-| Estas rutas redirigen a las nuevas rutas organizadas por rol.
-| Se mantendrán temporalmente para compatibilidad con enlaces existentes.
-*/
-
-Route::middleware(['auth'])->group(function () {
-    
-    // Dashboard (deprecated - redirige según rol)
-    Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
-    
-    // Tickets (deprecated - redirige a solicitante)
-    Route::redirect('/tickets', '/solicitante/tickets');
-    Route::redirect('/tickets/create', '/solicitante/tickets/create');
-    
-    // Surveys (deprecated - redirige a solicitante)
-    Route::redirect('/surveys', '/solicitante/surveys');
-    Route::redirect('/surveys/pending', '/solicitante/surveys/pending');
-    
-});
-
-/*
-|--------------------------------------------------------------------------
 | Rutas de Testing y Desarrollo
 |--------------------------------------------------------------------------
 */

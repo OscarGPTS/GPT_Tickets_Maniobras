@@ -134,12 +134,14 @@
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($ticket->images->where('type', 'solicitud') as $image)
-                            <div class="relative group">
+                            <div class="group relative cursor-pointer rounded-lg overflow-hidden aspect-square"
+                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
                                 <img src="{{ Storage::url($image->file_path) }}" 
-                                     alt="Imagen de solicitud" 
-                                     class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                     onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity rounded-lg"></div>
+                                     alt="{{ $image->original_name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl"></i>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -157,12 +159,14 @@
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($ticket->images->where('type', 'progreso') as $image)
-                            <div class="relative group">
+                            <div class="group relative cursor-pointer rounded-lg overflow-hidden aspect-square"
+                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
                                 <img src="{{ Storage::url($image->file_path) }}" 
-                                     alt="Imagen de progreso" 
-                                     class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                     onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity rounded-lg"></div>
+                                     alt="{{ $image->original_name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl"></i>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -180,12 +184,14 @@
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($ticket->images->where('type', 'evidencia') as $image)
-                            <div class="relative group">
+                            <div class="group relative cursor-pointer rounded-lg overflow-hidden aspect-square"
+                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
                                 <img src="{{ Storage::url($image->file_path) }}" 
-                                     alt="Evidencia de trabajo" 
-                                     class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                     onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity rounded-lg"></div>
+                                     alt="{{ $image->original_name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl"></i>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -540,44 +546,51 @@
 </div>
 
 <!-- Modal para ver imágenes -->
-<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeImageModal()">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden relative">
-            <button onclick="closeImageModal()" class="absolute top-4 right-4 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 z-10">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            <img id="modalImage" src="" alt="Imagen ampliada" class="w-full h-auto max-h-[90vh] object-contain">
-            <div class="p-4 bg-gray-50">
-                <p id="modalImageName" class="text-sm text-gray-600"></p>
-            </div>
-        </div>
+<div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 items-center justify-center p-4" style="display: none;">
+    <div class="relative max-w-6xl max-h-full" onclick="event.stopPropagation()">
+        <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="modalImage" src="" alt="" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl">
+        <p id="modalImageTitle" class="text-white text-center mt-4 text-sm"></p>
     </div>
 </div>
 
+@endsection
+
+@push('scripts')
 <script>
 // Funciones para el modal de imágenes
-function openImageModal(imageSrc, imageName) {
+function openImageModal(src, title) {
     const modal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const modalImageName = document.getElementById('modalImageName');
-    
-    modalImage.src = imageSrc;
-    modalImageName.textContent = imageName || 'Imagen';
+    document.getElementById('modalImage').src = src;
+    document.getElementById('modalImageTitle').textContent = title;
     modal.classList.remove('hidden');
-    
-    // Prevenir scroll del body
-    document.body.style.overflow = 'hidden';
+    modal.style.display = 'flex';
 }
 
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     modal.classList.add('hidden');
-    
-    // Restaurar scroll del body
-    document.body.style.overflow = 'auto';
+    modal.style.display = 'none';
 }
+
+// Cerrar modal al hacer clic en el fondo
+document.getElementById('imageModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
+
+// Cerrar modal con tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal && !imageModal.classList.contains('hidden')) {
+            closeImageModal();
+        }
+    }
+});
 
 // Funciones para el widget de evidencia
 let evidenceSelectedFiles = []; // Array para mantener archivos acumulados
@@ -847,4 +860,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+@endpush
+
+@push('styles')
+<style>
+#imageModal img {
+    animation: fadeInScale 0.3s ease;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+</style>
+@endpush
