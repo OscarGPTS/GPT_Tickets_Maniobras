@@ -22,8 +22,12 @@ class CheckRole
 
         $user = Auth::user();
 
-        // Verificar si el usuario tiene el rol requerido
-        if (!$user->roles()->where('name', $role)->exists()) {
+        // Verificar si el usuario tiene alguno de los roles requeridos (separados por coma)
+        $allowedRoles = explode(',', $role);
+        
+        $hasRole = $user->roles()->whereIn('name', $allowedRoles)->exists();
+        
+        if (!$hasRole) {
             abort(403, 'No tienes permisos para acceder a esta sección.');
         }
 

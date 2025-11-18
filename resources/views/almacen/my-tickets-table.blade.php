@@ -15,11 +15,18 @@
                         Historial completo de tickets asignados a mí
                     </p>
                 </div>
-                <a href="{{ route('almacen.dashboard') }}" 
-                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                    <i class="fas fa-arrow-left mr-2"></i>
-                    Volver al Dashboard
-                </a>
+                <div class="flex gap-3">
+                    <button onclick="document.getElementById('exportForm').submit()" 
+                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-green-700">
+                        <i class="fas fa-file-excel mr-2"></i>
+                        Exportar Excel
+                    </button>
+                    <a href="{{ route('almacen.dashboard') }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver al Dashboard
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -74,27 +81,36 @@
             </div>
         </div>
 
+        <!-- Formulario de exportación (oculto) -->
+        <form id="exportForm" action="{{ route('almacen.tickets.export') }}" method="GET" class="hidden">
+            <input type="hidden" name="status" value="{{ request('status') }}">
+            <input type="hidden" name="assigned_to" value="{{ Auth::id() }}">
+        </form>
+
         <!-- Filtros -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <form method="GET" action="{{ route('almacen.tickets.mine') }}" class="flex items-center space-x-4">
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Filtrar por estado:</label>
+            <form method="GET" action="{{ route('almacen.tickets.mine') }}" class="flex items-end gap-4">
+                <div class="flex-1">
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Filtrar por estado</label>
                     <select id="status" name="status" 
-                            onchange="this.form.submit()"
-                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
+                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 rounded-md">
                         <option value="">Todos los estados</option>
                         <option value="en_proceso" {{ request('status') == 'en_proceso' ? 'selected' : '' }}>En Proceso</option>
                         <option value="finalizado" {{ request('status') == 'finalizado' ? 'selected' : '' }}>Finalizados</option>
                     </select>
                 </div>
-                @if(request('status'))
-                    <div class="mt-6">
+                <div class="flex gap-2">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700">
+                        <i class="fas fa-search mr-2"></i>
+                        Filtrar
+                    </button>
+                    @if(request('status'))
                         <a href="{{ route('almacen.tickets.mine') }}" 
-                           class="text-sm text-blue-600 hover:text-blue-800">
-                            <i class="fas fa-times-circle mr-1"></i> Limpiar filtros
+                           class="inline-flex items-center px-4 py-2 bg-gray-300 text-gray-700 font-medium rounded-md hover:bg-gray-400">
+                            <i class="fas fa-times mr-1"></i> Limpiar
                         </a>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </form>
         </div>
 

@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketImage;
 use App\Models\Survey;
+use App\Exports\TicketsExport;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketCompletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
 {
@@ -277,5 +279,26 @@ class TicketController extends Controller
             DB::rollback();
             return back()->withErrors(['error' => 'Error al completar el ticket: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Exportar tickets a Excel
+     */
+    public function export(Request $request)
+    {
+        $filters = [
+            'status' => $request->status,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+        ];
+
+        // Si no es admin, solo mostrar tickets asignados al usuario
+        if (!Auth::user()->isAdmin()) {
+            $filters['assigned_to'] = Auth::id();
+        }
+
+        $filename = 'tickets_almacen_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(new TicketsExport($filters), $filename);
     }
 }

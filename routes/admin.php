@@ -41,6 +41,12 @@ Route::middleware(['auth', 'admin'])
         Route::get('/statistics', [AdminController::class, 'statistics'])
             ->name('statistics');
         
+        // Tickets
+        Route::get('/tickets', [AdminController::class, 'allTickets'])
+            ->name('tickets.index');
+        Route::get('/tickets/export', [AdminController::class, 'exportTickets'])
+            ->name('tickets.export');
+        
         // Notificaciones
         Route::get('/notifications', [NotificationController::class, 'index'])
             ->name('notifications.index');

@@ -15,6 +15,11 @@
                         <p class="text-gray-600 mt-2">Gestiona y asigna tickets que están esperando atención</p>
                     </div>
                     <div class="flex space-x-3">
+                        <button onclick="document.getElementById('exportForm').submit()" 
+                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-green-700">
+                            <i class="fas fa-file-excel mr-2"></i>
+                            Exportar Excel
+                        </button>
                         <a href="{{ route('almacen.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -25,6 +30,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Formulario de exportación (oculto) -->
+        <form id="exportForm" action="{{ route('almacen.tickets.export') }}" method="GET" class="hidden">
+            <input type="hidden" name="status" value="pendiente">
+        </form>
 
         <!-- Estadísticas Rápidas -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

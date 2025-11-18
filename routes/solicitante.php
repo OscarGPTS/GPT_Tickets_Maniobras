@@ -47,10 +47,14 @@ Route::middleware(['auth', 'role:solicitante'])
         
         // Encuestas
         Route::get('/surveys', [SurveyController::class, 'index'])
+            ->withoutMiddleware('role:solicitante')
+            ->middleware('role:solicitante,admin')
             ->name('surveys.index');
         Route::get('/surveys/pending', [SurveyController::class, 'pending'])
             ->name('surveys.pending');
         Route::get('/surveys/{survey}', [SurveyController::class, 'show'])
+            ->withoutMiddleware('role:solicitante')
+            ->middleware('role:solicitante,admin')
             ->name('surveys.show');
         Route::get('/surveys/{survey}/edit', [SurveyController::class, 'edit'])
             ->name('surveys.edit');
