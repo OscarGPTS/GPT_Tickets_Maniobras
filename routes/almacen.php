@@ -23,51 +23,38 @@ Route::middleware(['auth'])
         
         // Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->middleware('role:almacen,admin')
             ->name('dashboard');
         
         // Tickets
         Route::get('/tickets/pending', [TicketController::class, 'pending'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.pending');
         Route::get('/tickets/mine', [TicketController::class, 'mine'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.mine');
         Route::get('/tickets/export', [TicketController::class, 'export'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.export');
         Route::get('/tickets/{ticket}', [TicketController::class, 'show'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.show');
+            
         
         // Asignación y gestión de tickets
         Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.assign');
         Route::post('/tickets/{ticket}/progress', [TicketController::class, 'addProgress'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.progress');
         Route::post('/tickets/{ticket}/complete', [TicketController::class, 'complete'])
-            ->middleware('role:almacen,admin')
             ->name('tickets.complete');
         
         // Notificaciones
         Route::get('/notifications', [NotificationController::class, 'index'])
-            ->middleware('role:almacen,admin')
             ->name('notifications.index');
         Route::get('/notifications/{notification}', [NotificationController::class, 'show'])
-            ->middleware('role:almacen,admin')
             ->name('notifications.show');
         Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])
-            ->middleware('role:almacen,admin')
             ->name('notifications.mark-as-read');
         Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])
-            ->middleware('role:almacen,admin')
             ->name('notifications.mark-all-read');
         Route::delete('/notifications/{notification}', [NotificationController::class, 'destroy'])
-            ->middleware('role:almacen,admin')
             ->name('notifications.destroy');
         Route::delete('/notifications-read/delete-all', [NotificationController::class, 'deleteAllRead'])
-            ->middleware('role:almacen,admin')
             ->name('notifications.delete-all-read');
     });

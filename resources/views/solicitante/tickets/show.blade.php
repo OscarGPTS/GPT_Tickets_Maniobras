@@ -8,7 +8,7 @@
         
         <!-- Breadcrumb y Acciones -->
         <div class="mb-6 flex items-center justify-between">
-            <a href="{{ route('solicitante.tickets.index') }}" 
+            <a href="{{ route('home') }}" 
                class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>
                 Volver a Mis Tickets

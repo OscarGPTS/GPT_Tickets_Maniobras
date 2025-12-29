@@ -22,13 +22,13 @@ class TicketController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        /* $this->middleware('auth');
         $this->middleware(function ($request, $next) {
             if (!Auth::user()->isAlmacen() && !Auth::user()->isAdmin()) {
                 abort(403, 'No tienes acceso al panel de almacén.');
             }
             return $next($request);
-        });
+        }); */
     }
 
     /**

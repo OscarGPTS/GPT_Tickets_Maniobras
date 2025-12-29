@@ -45,7 +45,7 @@
                                 Volver a Pendientes
                             </a>
                         @else
-                            <a href="{{ route('almacen.tickets.mine') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <a href="{{ route('home') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                 </svg>
@@ -71,19 +71,6 @@
                             @else bg-gray-100 text-gray-800 @endif">
                             {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                         </span>
-                        @if($ticket->priority === 'alta')
-                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                Prioridad Alta
-                            </span>
-                        @elseif($ticket->priority === 'media')
-                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                                Prioridad Media
-                            </span>
-                        @else
-                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                Prioridad Baja
-                            </span>
-                        @endif
                     </div>
                 </div>
             </div>

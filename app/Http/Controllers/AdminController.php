@@ -110,7 +110,7 @@ class AdminController extends Controller
             ->get();
 
         // Tickets pendientes de autorización (sin asignar) - PRIORIDAD
-        $pendingTickets = Ticket::with(['user'])
+        $pendingTickets = Ticket::with(['user', 'solicitudImages'])
             ->where('status', 'pendiente')
             ->whereNull('assigned_to')
             ->orderBy('created_at', 'asc')

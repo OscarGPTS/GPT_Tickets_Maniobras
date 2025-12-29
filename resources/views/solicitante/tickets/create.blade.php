@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="mb-6">
             <div class="flex items-center space-x-3">
-                <a href="{{ route('solicitante.tickets.index') }}" 
+                <a href="{{ route('home') }}" 
                    class="inline-flex items-center text-gray-500 hover:text-gray-700">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Volver a Mis Tickets
