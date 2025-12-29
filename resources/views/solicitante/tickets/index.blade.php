@@ -16,14 +16,14 @@
 
     <!-- Widget de nueva solicitud o alerta de encuestas -->
     @if($canCreateTicket)
-        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+        <div class="bg-orange-600 rounded-lg shadow-lg p-6 mb-6 text-white">
             <div class="flex items-center justify-between">
                 <div class="flex-1">
-                    <h3 class="text-xl font-bold mb-2">¿Necesitas mover carga?</h3>
-                    <p class="text-indigo-100">Crea una nueva solicitud y nuestro equipo de almacén la atenderá lo antes posible.</p>
+                    <h3 class="text-xl font-bold mb-2">Nueva Solicitud</h3>
+                    <p>Crea una nueva solicitud y nuestro equipo de almacén la atenderá lo antes posible.</p>
                 </div>
                 <a href="{{ route('solicitante.tickets.create') }}" 
-                   class="inline-flex items-center px-6 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-indigo-50 transition-colors shadow-md ml-4">
+                   class="inline-flex items-center px-6 py-3 bg-white text-red-600 font-semibold rounded-lg hover:bg-indigo-50 transition-colors shadow-md ml-4">
                     <i class="fas fa-plus mr-2"></i>
                     Nueva Solicitud
                 </a>
@@ -67,7 +67,7 @@
            class="bg-white rounded-lg shadow-sm border-2 {{ request('status') === 'pendiente' ? 'border-yellow-500' : 'border-gray-200' }} p-4 hover:shadow-md transition-all duration-200 transform hover:scale-105">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-xs font-medium text-yellow-800 uppercase tracking-wide">Pendientes</p>
+                    <p class="text-xs font-medium text-yellow-800 uppercase tracking-wide">Por aprobar</p>
                     <p class="text-2xl font-bold text-yellow-900 mt-1">{{ Auth::user()->tickets()->where('status', 'pendiente')->count() }}</p>
                 </div>
                 <div class="p-3 bg-yellow-100 rounded-lg">
@@ -84,7 +84,7 @@
                     <p class="text-2xl font-bold text-blue-900 mt-1">{{ Auth::user()->tickets()->where('status', 'en_proceso')->count() }}</p>
                 </div>
                 <div class="p-3 bg-blue-100 rounded-lg">
-                    <i class="fas fa-spinner fa-pulse text-blue-600 text-xl"></i>
+                    <i class="fas fa-spinner text-blue-600 text-xl"></i>
                 </div>
             </div>
         </a>
@@ -123,7 +123,6 @@
             <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-gray-800">
-                        <i class="fas fa-table mr-2 text-indigo-600"></i>
                         Lista de Tickets
                         @if(request('status'))
                             <span class="ml-2 text-sm font-normal text-gray-600">
@@ -143,19 +142,22 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <i class="fas fa-hashtag mr-1"></i> ID / Estado
+                                ID 
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <i class="fas fa-file-alt mr-1"></i> Información
+                                Información
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <i class="fas fa-calendar mr-1"></i> Fechas
+                                Fechas
                             </th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hide-mobile">
-                                <i class="fas fa-user mr-1"></i> Asignación
+                                Asignación
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hide-mobile">
+                                Status
                             </th>
                             <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                <i class="fas fa-cog mr-1"></i> Acciones
+                                Acciones
                             </th>
                         </tr>
                     </thead>
@@ -168,26 +170,10 @@
                                     <div class="flex flex-col space-y-2">
                                         <div class="flex items-center space-x-2">
                                             <span class="text-sm font-bold text-gray-900">
-                                                #{{ $ticket->id }}
+                                                {{ $ticket->created_at->format('Y') }}-{{ str_pad($ticket->id, 4, '0', STR_PAD_LEFT) }}
                                             </span>
-                                            @if($ticket->created_at->diffInHours() < 24)
-                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-100 text-indigo-700 animate-pulse">
-                                                    <i class="fas fa-star mr-1"></i>NUEVO
-                                                </span>
-                                            @endif
                                         </div>
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $ticket->getStatusBadgeClass() }} uppercase shadow-sm status-badge">
-                                            @if($ticket->isPendiente())
-                                                <i class="fas fa-clock mr-1"></i>
-                                            @elseif($ticket->isEnProceso())
-                                                <i class="fas fa-spinner fa-pulse mr-1"></i>
-                                            @elseif($ticket->isFinalizado())
-                                                <i class="fas fa-check-circle mr-1"></i>
-                                            @elseif($ticket->isCancelado())
-                                                <i class="fas fa-times-circle mr-1"></i>
-                                            @endif
-                                            {{ $ticket->getStatusText() }}
-                                        </span>
+                                        
                                     </div>
                                 </td>
 
@@ -256,31 +242,24 @@
                                 </td>
 
                                 <!-- Asignación -->
-                                <td class="px-6 py-4 whitespace-nowrap hide-mobile">
+                                <td class="px-6 py-4 whitespace-nowrap text-start">
                                     @if($ticket->assigned_to)
-                                        <div class="flex items-center">
-                                            <div class="flex-shrink-0 h-8 w-8">
-                                                <div class="h-8 w-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-xs">
-                                                    {{ substr($ticket->assignedTo->name, 0, 1) }}
-                                                </div>
-                                            </div>
-                                            <div class="ml-3">
-                                                <div class="text-sm font-medium text-gray-900">
-                                                    {{ Str::limit($ticket->assignedTo->name, 20) }}
-                                                </div>
-                                                <div class="text-xs text-gray-500">
-                                                    Almacén
-                                                </div>
-                                            </div>
+                                        <div class="text-sm font-medium text-gray-900">
+                                            {{ Str::limit($ticket->assignedTo->name, 20) }}
                                         </div>
                                     @else
                                         <div class="text-sm text-gray-400 italic">
-                                            <i class="fas fa-user-slash mr-1"></i>
                                             Sin asignar
                                         </div>
                                     @endif
                                 </td>
 
+
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold {{ $ticket->getStatusBadgeClass() }} uppercase shadow-sm status-badge">
+                                        {{ $ticket->getStatusText() }}
+                                    </span>
+                                </td>
                                 <!-- Acciones -->
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center space-x-2">

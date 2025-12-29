@@ -161,7 +161,7 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Tiempo de Resolución</dt>
                             <dd class="text-sm text-gray-900">
-                                {{ $survey->ticket->created_at->diffForHumans($survey->ticket->completed_at, true) }}
+                                {{ $survey->ticket->created_at->diffForHumans($survey->ticket->completed_at, true, false, 2) }}
                             </dd>
                         </div>
                     </dl>

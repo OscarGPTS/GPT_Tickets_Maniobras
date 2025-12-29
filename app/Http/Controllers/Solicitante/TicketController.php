@@ -42,7 +42,7 @@ class TicketController extends Controller
         }
 
         // Paginación con parámetros persistentes
-        $tickets = $query->paginate(20)->appends($request->except('page'));
+        $tickets = $query->paginate(15)->appends($request->except('page'));
 
         // Encuestas pendientes
         $pendingSurveys = \App\Models\Survey::whereHas('ticket', function($query) use ($user) {

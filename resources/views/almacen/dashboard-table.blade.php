@@ -8,7 +8,7 @@
         
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900">Panel de Almacén</h1>
+            <h1 class="text-3xl font-bold text-gray-900">Panel de Almacén </h1>
             <p class="mt-1 text-sm text-gray-600">
                 Gestiona y responde a las solicitudes de servicio
             </p>
@@ -153,15 +153,6 @@
                             {{ $pendingTickets->links() }}
                         </div>
                     @endif
-                @else
-                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border-2 border-dashed border-green-300 p-12 text-center">
-                        <div class="text-green-600 mb-4">
-                            <i class="fas fa-check-double text-6xl"></i>
-                        </div>
-                        <h3 class="text-lg font-semibold text-green-900 mb-2">¡Todo al día!</h3>
-                        <p class="text-green-700">No hay tickets nuevos esperando asignación.</p>
-                        <p class="text-sm text-green-600 mt-2">Revisa la pestaña "Mis Tickets" para ver los que tienes asignados.</p>
-                    </div>
                 @endif
             </div>
         </div>

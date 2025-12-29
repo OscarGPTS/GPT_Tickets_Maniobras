@@ -30,8 +30,8 @@
             @endif
         </div>
 
-        <!-- Header del Ticket -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            
             <div class="flex items-start justify-between mb-6">
                 <div class="flex-1">
                     <div class="flex items-center space-x-3 mb-2">
@@ -131,21 +131,6 @@
                 @endif
             </ol>
 
-            <!-- Badge de estado actual -->
-            <div class="mt-6 flex justify-center">
-                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold {{ $ticket->getStatusBadgeClass() }}">
-                    @if($ticket->isPendiente())
-                        <i class="fas fa-clock mr-2"></i>
-                    @elseif($ticket->isEnProceso())
-                        <i class="fas fa-spinner fa-pulse mr-2"></i>
-                    @elseif($ticket->isFinalizado())
-                        <i class="fas fa-check-circle mr-2"></i>
-                    @elseif($ticket->isCancelado())
-                        <i class="fas fa-times-circle mr-2"></i>
-                    @endif
-                    {{ $ticket->getStatusText() }}
-                </span>
-            </div>
         </div>
 
         <!-- Alerta de Cancelación -->
@@ -249,10 +234,15 @@
                         
                         <!-- Tiempo transcurrido -->
                         @if($ticket->completed_at && $ticket->assigned_at)
+                            @php
+                                $diff = $ticket->assigned_at->diff($ticket->completed_at);
+                                $hours = ($diff->days * 24) + $diff->h;
+                                $minutes = $diff->i;
+                            @endphp
                             <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                                 <span class="text-sm text-gray-600">Tiempo de resolución</span>
                                 <span class="text-sm font-bold text-green-600">
-                                    {{ $ticket->assigned_at->diffInHours($ticket->completed_at) }}h
+                                    {{ $hours }}h {{ $minutes }}m
                                 </span>
                             </div>
                         @elseif($ticket->assigned_at)

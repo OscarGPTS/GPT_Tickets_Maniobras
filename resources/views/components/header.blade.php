@@ -5,10 +5,8 @@
             <div class="flex items-center">
                 <div class="flex-shrink-0">
                     <a href="{{ route('home') }}" class="flex items-center">
-                        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-2 rounded-lg">
-                            <i class="fas fa-ticket-alt text-white text-xl"></i>
-                        </div>
-                        <span class="ml-3 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                        <img src="{{ asset('storage/img/logo.png') }}" alt="Logo" style="width: 60px; height: auto;">
+                        <span class="ml-3 text-xl font-bold bg-gradient-to-r bg-red-600  bg-clip-text text-transparent">
                             Sistema de Tickets de Cargas
                         </span>
                     </a>
