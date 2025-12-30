@@ -36,7 +36,7 @@
                 <div class="flex-1">
                     <div class="flex items-center space-x-3 mb-2">
                         <span class="text-sm font-medium text-gray-500">Ticket</span>
-                        <span class="text-2xl font-bold text-gray-900">#{{ $ticket->id }}</span>
+                        <span class="text-2xl font-bold text-gray-900">{{ $ticket->formatted_code }}</span>
                     </div>
                     <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ $ticket->title }}</h1>
                     <p class="text-gray-600 text-sm">
@@ -182,7 +182,7 @@
                         <!-- ID -->
                         <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                             <span class="text-sm text-gray-600">ID del Ticket</span>
-                            <span class="text-sm font-bold text-gray-900">#{{ $ticket->id }}</span>
+                            <span class="text-sm font-bold text-gray-900">{{ $ticket->formatted_code }}</span>
                         </div>
                         
                         <!-- Estado -->

@@ -63,8 +63,11 @@ class TicketController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Ordenar por fecha de asignación descendente (más recientes primero)
-        $tickets = $query->orderBy('assigned_at', 'desc')
+        // Priorizar los que están en proceso y luego ordenar por más recientes
+        $tickets = $query
+            ->orderByRaw("CASE WHEN status = 'en_proceso' THEN 0 ELSE 1 END")
+            ->orderByDesc('assigned_at')
+            ->orderByDesc('created_at')
             ->paginate(15);
 
         // Estadísticas del usuario

@@ -91,7 +91,6 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitante</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Asignado a</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridad</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
@@ -100,7 +99,7 @@
                     <tbody class="bg-white divide-y divide-gray-200">
                         @forelse($tickets as $ticket)
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ $ticket->id }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $ticket->formatted_code }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ Str::limit($ticket->title, 50) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $ticket->user->name ?? 'N/A' }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $ticket->assignedTo->name ?? 'Sin asignar' }}</td>
@@ -114,15 +113,6 @@
                                         @elseif($ticket->status === 'en_proceso') En Proceso
                                         @elseif($ticket->status === 'completado') Completado
                                         @else {{ ucfirst($ticket->status) }} @endif
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                        @if($ticket->priority === 'urgente') bg-red-100 text-red-800
-                                        @elseif($ticket->priority === 'alta') bg-orange-100 text-orange-800
-                                        @elseif($ticket->priority === 'media') bg-yellow-100 text-yellow-800
-                                        @else bg-green-100 text-green-800 @endif">
-                                        {{ ucfirst($ticket->priority) }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ $ticket->created_at->format('d/m/Y') }}</td>

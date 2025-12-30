@@ -99,7 +99,7 @@
                             <div class="flex-1">
                                 <div class="flex items-center space-x-3 mb-3">
                                     <h4 class="text-lg font-semibold text-gray-900">
-                                        #{{ $ticket->id }} - {{ $ticket->title }}
+                                        {{ $ticket->formatted_code }} - {{ $ticket->title }}
                                     </h4>
                                     <span class="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
                                         Pendiente

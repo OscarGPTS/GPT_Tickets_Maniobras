@@ -62,7 +62,7 @@
                                     <tr class="hover:bg-orange-50 transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                                                #{{ $ticket->id }}
+                                                {{ $ticket->formatted_code }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4">
@@ -158,8 +158,8 @@
                     <!-- Gestionar Usuarios -->
                     <a href="{{ route('admin.users.index') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                         <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-1.5H5a2 2 0 00-2 2v10a2 2 0 002 2h6.5"></path>
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13 20V18C13 15.2386 10.7614 13 8 13C5.23858 13 3 15.2386 3 18V20H13ZM13 20H21V19C21 16.0545 18.7614 14 16 14C14.5867 14 13.3103 14.6255 12.4009 15.6311M11 7C11 8.65685 9.65685 10 8 10C6.34315 10 5 8.65685 5 7C5 5.34315 6.34315 4 8 4C9.65685 4 11 5.34315 11 7ZM18 9C18 10.1046 17.1046 11 16 11C14.8954 11 14 10.1046 14 9C14 7.89543 14.8954 7 16 7C17.1046 7 18 7.89543 18 9Z" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
                         <div>
@@ -197,9 +197,7 @@
                     <!-- Ver Encuestas -->
                     <a href="{{ route('admin.tickets.index', ['status' => 'completado']) }}" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
                         <div class="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
+                            <svg width="18px" height="16px" viewBox="0 0 1024 1024" fill="#FFFFFF" class="icon"  version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M824.8 1003.2H203.2c-12.8 0-25.6-2.4-37.6-7.2-11.2-4.8-21.6-12-30.4-20.8-8.8-8.8-16-19.2-20.8-30.4-4.8-12-7.2-24-7.2-37.6V260c0-12.8 2.4-25.6 7.2-37.6 4.8-11.2 12-21.6 20.8-30.4 8.8-8.8 19.2-16 30.4-20.8 12-4.8 24-7.2 37.6-7.2h94.4v48H203.2c-26.4 0-48 21.6-48 48v647.2c0 26.4 21.6 48 48 48h621.6c26.4 0 48-21.6 48-48V260c0-26.4-21.6-48-48-48H730.4v-48H824c12.8 0 25.6 2.4 37.6 7.2 11.2 4.8 21.6 12 30.4 20.8 8.8 8.8 16 19.2 20.8 30.4 4.8 12 7.2 24 7.2 37.6v647.2c0 12.8-2.4 25.6-7.2 37.6-4.8 11.2-12 21.6-20.8 30.4-8.8 8.8-19.2 16-30.4 20.8-11.2 4.8-24 7.2-36.8 7.2z" fill="" /><path d="M752.8 308H274.4V152.8c0-32.8 26.4-60 60-60h61.6c22.4-44 67.2-72.8 117.6-72.8 50.4 0 95.2 28.8 117.6 72.8h61.6c32.8 0 60 26.4 60 60v155.2m-430.4-48h382.4V152.8c0-6.4-5.6-12-12-12H598.4l-5.6-16c-12-33.6-43.2-56-79.2-56s-67.2 22.4-79.2 56l-5.6 16H334.4c-6.4 0-12 5.6-12 12v107.2zM432.8 792c-6.4 0-12-2.4-16.8-7.2L252.8 621.6c-4.8-4.8-7.2-10.4-7.2-16.8s2.4-12 7.2-16.8c4.8-4.8 10.4-7.2 16.8-7.2s12 2.4 16.8 7.2L418.4 720c4 4 8.8 5.6 13.6 5.6s10.4-1.6 13.6-5.6l295.2-295.2c4.8-4.8 10.4-7.2 16.8-7.2s12 2.4 16.8 7.2c9.6 9.6 9.6 24 0 33.6L449.6 784.8c-4.8 4-11.2 7.2-16.8 7.2z" fill="" /></svg>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-900">Tickets Completados</p>
@@ -377,7 +375,7 @@
                             @forelse($recentTickets as $ticket)
                                 <div class="p-3 bg-gray-50 rounded-lg">
                                     <div class="flex items-center justify-between mb-2">
-                                        <p class="text-sm font-medium text-gray-900">#{{ $ticket->id }} - {{ Str::limit($ticket->title, 25) }}</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ $ticket->formatted_code }} - {{ Str::limit($ticket->title, 25) }}</p>
                                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                                             @if($ticket->status === 'completado') bg-green-100 text-green-800
                                             @elseif($ticket->status === 'en_proceso') bg-blue-100 text-blue-800
@@ -545,33 +543,28 @@
                             @forelse($allTickets as $ticket)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{{ $ticket->id }}
+                                        {{ $ticket->formatted_code }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ Str::limit($ticket->title, 30) }}</div>
                                         <div class="text-sm text-gray-500">{{ Str::limit($ticket->description, 50) }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-2 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                                                <span class="text-white text-xs font-bold">{{ substr($ticket->user->name, 0, 1) }}</span>
-                                            </div>
+                                            
                                             <div class="ml-3">
                                                 <div class="text-sm font-medium text-gray-900">{{ $ticket->user->name }}</div>
                                                 <div class="text-sm text-gray-500">{{ $ticket->user->email }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                         @if($ticket->assignedTo)
                                             <div class="flex items-center">
-                                                <div class="w-6 h-6 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                                                    <span class="text-white text-xs font-bold">{{ substr($ticket->assignedTo->name, 0, 1) }}</span>
-                                                </div>
                                                 <span class="ml-2 text-sm text-gray-900">{{ $ticket->assignedTo->name }}</span>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 italic">Sin asignar</span>
+                                            <span class="ml-2 text-gray-400 italic">Sin asignar</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">

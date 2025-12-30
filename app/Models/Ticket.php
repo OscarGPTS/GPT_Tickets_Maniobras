@@ -219,4 +219,13 @@ class Ticket extends Model
             default => 'Desconocido',
         };
     }
+
+    /**
+     * Código legible: YYYY-####
+     */
+    public function getFormattedCodeAttribute(): string
+    {
+        $year = $this->created_at?->format('Y') ?? now()->format('Y');
+        return $year . '-' . str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+    }
 }

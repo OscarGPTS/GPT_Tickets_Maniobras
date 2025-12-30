@@ -128,12 +128,11 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID / Título</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitante</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fechas</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tiempo</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Calificación</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
@@ -142,15 +141,13 @@
                                 <tr class="hover:bg-gray-50 transition-colors">
                                     <!-- ID / Título -->
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center">
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold 
-                                                {{ $ticket->status === 'finalizado' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' }}">
-                                                #{{ $ticket->id }}
-                                            </span>
-                                            <div class="ml-3">
-                                                <div class="text-sm font-medium text-gray-900">{{ Str::limit($ticket->title, 40) }}</div>
-                                                <div class="text-xs text-gray-500">{{ Str::limit($ticket->description, 60) }}</div>
-                                            </div>
+                                        <p class="text-sm font-semibold text-gray-900">{{ $ticket->formatted_code }}</p>
+                                    </td>
+
+                                    <td class="px-2 py-4">
+                                        <div class="ml-3">
+                                            <div class="text-sm font-medium text-gray-900">{{ Str::limit($ticket->title, 40) }}</div>
+                                            <div class="text-xs text-gray-500">{{ Str::limit($ticket->description, 60) }}</div>
                                         </div>
                                     </td>
 
@@ -164,15 +161,15 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($ticket->status === 'en_proceso')
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                <i class="fas fa-spinner mr-1"></i> En Progreso
+                                                En Progreso
                                             </span>
                                         @elseif($ticket->status === 'finalizado')
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                <i class="fas fa-check-circle mr-1"></i> Finalizado
+                                                Finalizado
                                             </span>
                                         @elseif($ticket->status === 'cancelado')
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                <i class="fas fa-times-circle mr-1"></i> Cancelado
+                                                Cancelado
                                             </span>
                                         @endif
                                     </td>
@@ -197,43 +194,6 @@
                                         </div>
                                     </td>
 
-                                    <!-- Tiempo de Resolución -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($ticket->completed_at && $ticket->assigned_at)
-                                            @php
-                                                $diff = $ticket->assigned_at->diff($ticket->completed_at);
-                                                $hours = ($diff->days * 24) + $diff->h;
-                                                $minutes = $diff->i;
-                                            @endphp
-                                            <div class="text-sm text-gray-900">
-                                                <span class="font-semibold">{{ $hours }}h {{ $minutes }}m</span>
-                                            </div>
-                                            <div class="text-xs text-gray-500">Tiempo total</div>
-                                        @else
-                                            <div class="text-sm text-gray-500">
-                                                <i class="fas fa-clock mr-1"></i>En curso
-                                            </div>
-                                        @endif
-                                    </td>
-
-                                    <!-- Calificación -->
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        @if($ticket->survey && $ticket->survey->completed_at && $ticket->survey->rating)
-                                            <div class="flex items-center">
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    <svg class="w-4 h-4 {{ $i <= $ticket->survey->rating ? 'text-yellow-400' : 'text-gray-300' }}" 
-                                                         fill="currentColor" viewBox="0 0 20 20">
-                                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
-                                                    </svg>
-                                                @endfor
-                                            </div>
-                                            <div class="text-xs text-gray-600 mt-1">{{ $ticket->survey->rating }}/5</div>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                                Sin calificar
-                                            </span>
-                                        @endif
-                                    </td>
 
                                     <!-- Acciones -->
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">

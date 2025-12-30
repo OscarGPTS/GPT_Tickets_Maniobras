@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Alerta de Ticket Cancelado -->
         @if($ticket->status === 'cancelado')
@@ -33,7 +33,7 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Ticket #{{ $ticket->id }}</h1>
+                        <h1 class="text-3xl font-bold text-gray-900">Ticket {{ $ticket->formatted_code }}</h1>
                         <p class="text-gray-600 mt-2">{{ $ticket->title }}</p>
                     </div>
                     <div class="flex space-x-3">
@@ -52,6 +52,67 @@
                                 Volver a Mis Tickets
                             </a>
                         @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stepper de Estado -->
+        <div class="mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div class="flex justify-between items-start">
+                    <!-- Paso 1: Solicitado -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full {{ $ticket->created_at ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }} mb-2">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 text-center">Solicitado</h3>
+                        <p class="text-xs text-gray-600 text-center mt-1">
+                            {{ $ticket->created_at->format('d/m/Y H:i') }}
+                        </p>
+                        <div class="text-xs text-gray-500 text-center mt-1 max-w-[80px]">
+                            hace {{ $ticket->created_at->diffForHumans() }}
+                        </div>
+                    </div>
+
+                    <!-- Línea conectora 1 -->
+                    <div class="flex-1 mx-2 mt-5 flex items-center">
+                        <div class="flex-1 h-1 {{ ($ticket->assigned_at || in_array($ticket->status, ['en_proceso', 'finalizado'])) ? 'bg-blue-600' : 'bg-gray-300' }}"></div>
+                    </div>
+
+                    <!-- Paso 2: En Proceso -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full {{ ($ticket->assigned_at || in_array($ticket->status, ['en_proceso', 'finalizado'])) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }} mb-2">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 text-center">En Proceso</h3>
+                        <p class="text-xs text-gray-600 text-center mt-1">
+                            {{ $ticket->assigned_at ? $ticket->assigned_at->format('d/m/Y H:i') : '-' }}
+                        </p>
+                        <div class="text-xs text-gray-500 text-center mt-1 max-w-[80px]">
+                            {{ $ticket->assigned_at ? 'hace ' . $ticket->assigned_at->diffForHumans() : 'Pendiente' }}
+                        </div>
+                    </div>
+
+                    <!-- Línea conectora 2 -->
+                    <div class="flex-1 mx-2 mt-5 flex items-center">
+                        <div class="flex-1 h-1 {{ ($ticket->completed_at || $ticket->cancelled_at) ? 'bg-blue-600' : 'bg-gray-300' }}"></div>
+                    </div>
+
+                    <!-- Paso 3: Finalizado/Cancelado -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full {{ ($ticket->completed_at || $ticket->cancelled_at) ? ($ticket->cancelled_at ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600') : 'bg-gray-100 text-gray-400' }} mb-2">
+                            <i class="fas {{ $ticket->cancelled_at ? 'fa-times-circle' : 'fa-check-circle' }}"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 text-center">
+                            {{ $ticket->cancelled_at ? 'Cancelado' : 'Finalizado' }}
+                        </h3>
+                        <p class="text-xs text-gray-600 text-center mt-1">
+                            {{ $ticket->completed_at ? $ticket->completed_at->format('d/m/Y H:i') : ($ticket->cancelled_at ? $ticket->cancelled_at->format('d/m/Y H:i') : '-') }}
+                        </p>
+                        <div class="text-xs text-gray-500 text-center mt-1 max-w-[80px]">
+                            {{ $ticket->completed_at ? 'hace ' . $ticket->completed_at->diffForHumans() : ($ticket->cancelled_at ? 'hace ' . $ticket->cancelled_at->diffForHumans() : 'Pendiente') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -364,6 +425,7 @@
         @endif
 
         <!-- Formulario para Completar -->
+        @if($ticket->status !== 'finalizado' && $ticket->status !== 'cancelado')
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-lg font-semibold text-gray-900">Evidencia del Trabajo Realizado</h3>
@@ -417,9 +479,7 @@
                                     <p class="pl-1">o arrastra y suelta</p>
                                 </div>
                                 <p class="text-xs text-gray-500">PNG, JPG, GIF hasta 2MB cada una (máximo 5 imágenes)</p>
-                                <p class="text-xs text-green-600 font-medium mt-1">
-                                    💡 Las imágenes se acumulan - puedes agregar más sin perder las anteriores
-                                </p>
+                                
                             </div>
                         </div>
                     </div>
@@ -496,7 +556,8 @@
 
             </form>
         </div>
-        @else
+        @endif
+        @elseif($ticket->status !== 'cancelado')
             <!-- Mensaje para tickets completados -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
