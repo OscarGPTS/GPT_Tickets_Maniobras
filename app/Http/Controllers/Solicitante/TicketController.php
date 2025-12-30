@@ -34,7 +34,8 @@ class TicketController extends Controller
         
         $query = $user->tickets()
             ->with(['assignedTo', 'images', 'survey'])
-            ->orderBy('created_at', 'desc'); // Más recientes primero
+            ->orderByRaw("CASE WHEN status = 'pendiente' THEN 0 WHEN status = 'en_proceso' THEN 1 ELSE 2 END")
+            ->orderByDesc('created_at'); // Más recientes primero
 
         // Filtrar por estado si se proporciona
         if ($request->has('status') && $request->status) {

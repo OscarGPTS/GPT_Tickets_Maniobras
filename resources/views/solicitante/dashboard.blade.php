@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-900">
-            ¡Hola, {{ Auth::user()->name }}! 👋
+            ¡Hola, {{ Auth::user()->name }}!
         </h1>
         <p class="mt-1 text-sm text-gray-500">
             Bienvenido a tu panel de control de tickets
