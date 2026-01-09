@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketAssigned extends Notification implements ShouldQueue
+class TicketAssigned extends Notification
 {
     use Queueable;
 
@@ -36,7 +36,7 @@ class TicketAssigned extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Ticket asignado #' . $this->ticket->id)
+            ->subject('[Movimiento de Carga] Ticket asignado #' . $this->ticket->id)
             ->view('emails.tickets.assigned', [
                 'ticket' => $this->ticket,
                 'recipient' => $notifiable,

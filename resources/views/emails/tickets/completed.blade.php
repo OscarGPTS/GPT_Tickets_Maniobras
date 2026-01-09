@@ -36,6 +36,13 @@
             font-weight: 600;
             letter-spacing: 0.5px;
         }
+        .header .subtitle {
+            margin: 8px 0 0 0;
+            font-size: 13px;
+            font-weight: 400;
+            opacity: 0.9;
+            letter-spacing: 0.3px;
+        }
         .content {
             padding: 40px 30px;
         }
@@ -139,8 +146,7 @@
                     </g>
                 </svg>
             </div>
-            <h1>¡Ticket Completado!</h1>
-        </div>
+            <h1>¡Ticket Completado!</h1>            <p class="subtitle">Sistema de Movimiento de Carga</p>        </div>
         
         <div class="content">
             <p class="greeting">Estimado(a) <strong>{{ $recipient->name }}</strong>,</p>

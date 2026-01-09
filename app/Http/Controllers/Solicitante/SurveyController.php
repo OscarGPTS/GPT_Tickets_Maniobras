@@ -139,7 +139,7 @@ class SurveyController extends Controller
                 'completed_at' => now(),
             ]);
 
-            // Notificar al miembro de almacén
+            // Notificar al miembro de almacén y a jrlara
             $ticket = $survey->ticket;
             if ($ticket->assignedTo) {
                 try {
@@ -148,6 +148,15 @@ class SurveyController extends Controller
                 } catch (\Exception $e) {
                     Log::error('Error al enviar notificación de encuesta completada: ' . $e->getMessage());
                 }
+            }
+            
+            // Notificar a jrlara@gptservices.com
+            try {
+                Notification::route('mail', 'jrlara@gptservices.com')
+                    ->notify(new SurveyCompletedNotification($survey));
+                Log::info('Notificación de encuesta completada enviada a jrlara@gptservices.com para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación de encuesta a jrlara: ' . $e->getMessage());
             }
 
             DB::commit();

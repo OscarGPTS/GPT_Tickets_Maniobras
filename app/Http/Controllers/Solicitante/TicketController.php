@@ -8,6 +8,7 @@ use App\Models\TicketImage;
 use App\Models\User;
 use App\Notifications\TicketCreatedNotification;
 use App\Notifications\TicketCancelledNotification;
+use App\Notifications\TicketPendingApprovalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -126,6 +127,17 @@ class TicketController extends Controller
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificaciones de ticket creado: ' . $e->getMessage());
+            }
+
+            // Notificar a jrlara@gptservices.com para aprobación y creación
+            try {
+                Notification::route('mail', 'jrlara@gptservices.com')
+                    ->notify(new TicketCreatedNotification($ticket));
+                Notification::route('mail', 'jrlara@gptservices.com')
+                    ->notify(new TicketPendingApprovalNotification($ticket));
+                Log::info('Notificaciones de creación y aprobación enviadas a jrlara@gptservices.com para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificaciones a jrlara@gptservices.com: ' . $e->getMessage());
             }
             
             DB::commit();

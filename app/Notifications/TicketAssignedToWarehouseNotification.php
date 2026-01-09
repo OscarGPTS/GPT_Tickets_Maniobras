@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketAssignedNotification extends Notification
+class TicketAssignedToWarehouseNotification extends Notification
 {
     use Queueable;
 
@@ -29,7 +29,7 @@ class TicketAssignedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -38,8 +38,8 @@ class TicketAssignedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('[Movimiento de Carga] Ticket Asignado #' . $this->ticket->id)
-            ->view('emails.tickets.assigned-notification', [
+            ->subject('[Movimiento de Carga] Ticket Asignado a Ti #' . $this->ticket->id)
+            ->view('emails.tickets.assigned-to-warehouse', [
                 'ticket' => $this->ticket,
                 'recipient' => $notifiable,
             ]);
@@ -55,12 +55,8 @@ class TicketAssignedNotification extends Notification
         return [
             'ticket_id' => $this->ticket->id,
             'ticket_title' => $this->ticket->title,
-            'assigned_to' => $this->ticket->assignedTo->name,
-            'message' => 'Tu ticket "' . $this->ticket->title . '" ha sido asignado a ' . $this->ticket->assignedTo->name,
-            'action_url' => route('tickets.show', $this->ticket),
-            'type' => 'ticket_assigned',
-            'icon' => 'fa-user-check',
-            'color' => 'indigo',
+            'user_name' => $this->ticket->user->name,
+            'message' => 'Se te ha asignado el ticket: ' . $this->ticket->title,
         ];
     }
 }

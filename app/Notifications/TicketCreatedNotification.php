@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketCreatedNotification extends Notification implements ShouldQueue
+class TicketCreatedNotification extends Notification
 {
     use Queueable;
 
@@ -38,15 +38,11 @@ class TicketCreatedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Nuevo Ticket Creado #' . $this->ticket->id)
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('Se ha creado un nuevo ticket que requiere tu atención.')
-            ->line('**Ticket #' . $this->ticket->id . ':** ' . $this->ticket->title)
-            ->line('**Solicitante:** ' . $this->ticket->user->name)
-            ->line('**Descripción:** ' . substr($this->ticket->description, 0, 100) . '...')
-            ->action('Ver Ticket', route('almacen.tickets.show', $this->ticket))
-            ->line('Por favor, revisa y asigna este ticket lo antes posible.')
-            ->salutation('Saludos, ' . config('app.name'));
+            ->subject('[Movimiento de Carga] Nuevo Ticket Creado #' . $this->ticket->id)
+            ->view('emails.tickets.created-notification', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

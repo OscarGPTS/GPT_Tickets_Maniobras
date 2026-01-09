@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket Calificado</title>
+    <title>Ticket Asignado a Ti</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -75,33 +75,23 @@
             display: inline-block;
             min-width: 140px;
         }
-        .rating-box {
+        .description-box {
             background: #ffffff;
-            border: 2px solid #F59E0B;
+            border: 1px solid #e0e0e0;
             border-radius: 4px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
         }
-        .stars {
-            font-size: 32px;
-            color: #F59E0B;
-            margin: 15px 0;
+        .description-title {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 12px;
+            font-size: 14px;
         }
-        .rating-score {
-            font-size: 48px;
-            font-weight: bold;
-            color: #CF0A2C;
-            margin: 10px 0;
-        }
-        .comment-box {
-            background: #F9FAFB;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: left;
-            font-style: italic;
+        .description-content {
+            font-size: 14px;
             color: #555555;
+            line-height: 1.8;
         }
         .button {
             display: inline-block;
@@ -129,6 +119,16 @@
             color: #F9BE00;
             font-weight: 600;
         }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #6366F1;
+            color: #ffffff;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
     </style>
 </head>
 <body>
@@ -138,7 +138,7 @@
                 <svg width="140" height="57" viewBox="0 0 93.133331 37.835415" xmlns="http://www.w3.org/2000/svg">
                     <g transform="translate(-58.223892,-108.28795)">
                         <path style="fill:#ffffff" d="m 66.454435,117.49915 c -2.816387,1.1181 -5.310212,2.71303 -6.619458,6.05908 1.47735,3.71076 4.619124,6.10255 9.596462,7.03974 l 16.706249,0.1401 -0.07004,-12.81864 -13.27394,5e-5 -3.607429,4.41296 10.577123,0.1401 v 3.01203 l -10.787264,-0.17512 c -2.92795,-1.95664 -4.271273,-4.40429 -2.521703,-7.8103 z"/>
-                        <path style="fill:#ffffff" d="M 89.815165,119.98583 V 130.633 l 6.33927,0.035 0.03503,-5.14847 13.168855,-0.14009 c 13.10808,-2.6908 8.64852,-14.21576 0.035,-15.51545 l -39.751761,0.17507 c -7.9867,1.18021 -10.636765,6.50987 -10.121816,11.24257 2.429541,-4.16438 6.111582,-5.10007 9.911674,-5.84894 l 39.436553,-0.21014 c 2.65766,0.99397 3.35436,4.03851 0,4.9033 z"/>
+                        <path style="fill:#ffffff" d="M 89.815165,119.98583 V 130.633 l 6.33927,0.035 0.03503,-5.14847 13.168855,-0.14009 c 13.10808,-2.6908 8.64852,-14.21576 0.035,-15.51545 l -39.751761,0.17507 c -7.9867,1.18021 -10.636765,6.50987 -10.121816,11.24257 2.429541,-4.16438 6.111582-5.10007 9.911674,-5.84894 l 39.436553,-0.21014 c 2.65766,0.99397 3.35436,4.03851 0,4.9033 z"/>
                         <path style="fill:#ffffff" d="m 124.89239,115.32133 0.19812,15.30502 6.33995,0.0495 -0.1486,-15.35455 7.67728,-0.0495 4.012,-5.10168 -29.02507,-0.0495 c 2.30505,1.31576 3.96832,2.96117 4.32069,5.25328 z"/>
                         <ellipse style="fill:none;stroke:#ffffff;stroke-width:0.429953" cx="146.76024" cy="112.72095" rx="2.5674231" ry="2.5178928"/>
                         <text style="font-weight:bold;font-size:4.23333px;font-family:Helvetica;fill:#ffffff" x="145.24956" y="114.18214"><tspan x="145.24956" y="114.18214">R</tspan></text>
@@ -146,17 +146,17 @@
                     </g>
                 </svg>
             </div>
-            <h1>Ticket Calificado</h1>
+            <h1>Ticket Asignado</h1>
             <p class="subtitle">Sistema de Movimiento de Carga</p>
         </div>
         
         <div class="content">
             <p class="greeting">Estimado(a) <strong>{{ $recipient->name }}</strong>,</p>
             
-            <p>El ticket que procesaste ha sido calificado por el solicitante.</p>
+            <p>Tu ticket ha sido asignado a un miembro del equipo de almacén.</p>
             
             <div class="info-box">
-                <h3>Información del Ticket</h3>
+                <h3>Información de la Solicitud</h3>
                 <div class="info-row">
                     <span class="info-label">Ticket #:</span> 
                     <strong>{{ $ticket->id }}</strong>
@@ -166,42 +166,34 @@
                     {{ $ticket->title }}
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Solicitante:</span> 
-                    {{ $ticket->user->name }}
+                    <span class="info-label">Asignado a:</span> 
+                    {{ $ticket->assignedTo->name }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Fecha de asignación:</span> 
+                    {{ now()->format('d/m/Y H:i') }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado:</span> 
+                    <span class="badge">{{ $ticket->getStatusText() }}</span>
                 </div>
             </div>
 
-            <div class="rating-box">
-                <h3 style="margin: 0 0 10px 0; color: #333;">Calificación Recibida</h3>
-                
-                <div class="rating-score">{{ $survey->rating }}/5</div>
-                
-                <div class="stars">
-                    @for($i = 1; $i <= 5; $i++)
-                        @if($i <= $survey->rating)
-                            ⭐
-                        @else
-                            ☆
-                        @endif
-                    @endfor
-                </div>
-
-                @if($survey->comments)
-                <div class="comment-box">
-                    <strong>Comentarios del solicitante:</strong><br>
-                    "{{ $survey->comments }}"
-                </div>
-                @endif
+            @if($ticket->description)
+            <div class="description-box">
+                <div class="description-title">Descripción:</div>
+                <div class="description-content">{{ $ticket->description }}</div>
             </div>
+            @endif
 
             <p style="text-align: center;">
-                <a href="{{ url('/almacen/tickets/' . $ticket->id) }}" class="button">
+                <a href="{{ url('/tickets/' . $ticket->id) }}" class="button">
                     VER TICKET
                 </a>
             </p>
 
             <p style="color: #666666; font-size: 14px;">
-                ¡Gracias por tu excelente trabajo! Esta retroalimentación nos ayuda a mejorar continuamente.
+                Recibirás una notificación cuando el ticket sea completado.
             </p>
         </div>
         

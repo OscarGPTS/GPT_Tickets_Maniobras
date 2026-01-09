@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketCompletedNotification extends Notification implements ShouldQueue
+class TicketCompletedNotification extends Notification
 {
     use Queueable;
 
@@ -38,15 +38,11 @@ class TicketCompletedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Ticket Completado #' . $this->ticket->id)
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('Tu ticket ha sido completado.')
-            ->line('**Ticket #' . $this->ticket->id . ':** ' . $this->ticket->title)
-            ->line('**Completado por:** ' . $this->ticket->assignedTo->name)
-            ->line('**Evidencia del trabajo:** ' . substr($this->ticket->work_evidence ?? 'Sin evidencia', 0, 100))
-            ->action('Ver Ticket y Calificar Servicio', route('tickets.show', $this->ticket))
-            ->line('Por favor, revisa el trabajo realizado y califica el servicio.')
-            ->salutation('Saludos, ' . config('app.name'));
+            ->subject('[Movimiento de Carga] Ticket Completado #' . $this->ticket->id)
+            ->view('emails.tickets.completed', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

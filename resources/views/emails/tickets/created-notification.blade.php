@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ticket Calificado</title>
+    <title>Nuevo Ticket Creado</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -75,33 +75,23 @@
             display: inline-block;
             min-width: 140px;
         }
-        .rating-box {
+        .description-box {
             background: #ffffff;
-            border: 2px solid #F59E0B;
+            border: 1px solid #e0e0e0;
             border-radius: 4px;
-            padding: 25px;
-            margin: 25px 0;
-            text-align: center;
+            padding: 20px;
+            margin: 20px 0;
         }
-        .stars {
-            font-size: 32px;
-            color: #F59E0B;
-            margin: 15px 0;
+        .description-title {
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 12px;
+            font-size: 14px;
         }
-        .rating-score {
-            font-size: 48px;
-            font-weight: bold;
-            color: #CF0A2C;
-            margin: 10px 0;
-        }
-        .comment-box {
-            background: #F9FAFB;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 15px 0;
-            text-align: left;
-            font-style: italic;
+        .description-content {
+            font-size: 14px;
             color: #555555;
+            line-height: 1.8;
         }
         .button {
             display: inline-block;
@@ -129,6 +119,16 @@
             color: #F9BE00;
             font-weight: 600;
         }
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #3B82F6;
+            color: #ffffff;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
     </style>
 </head>
 <body>
@@ -146,17 +146,17 @@
                     </g>
                 </svg>
             </div>
-            <h1>Ticket Calificado</h1>
+            <h1>Nuevo Ticket Creado</h1>
             <p class="subtitle">Sistema de Movimiento de Carga</p>
         </div>
         
         <div class="content">
             <p class="greeting">Estimado(a) <strong>{{ $recipient->name }}</strong>,</p>
             
-            <p>El ticket que procesaste ha sido calificado por el solicitante.</p>
+            <p>Se ha creado un nuevo ticket que requiere tu atención.</p>
             
             <div class="info-box">
-                <h3>Información del Ticket</h3>
+                <h3>Información de la Solicitud</h3>
                 <div class="info-row">
                     <span class="info-label">Ticket #:</span> 
                     <strong>{{ $ticket->id }}</strong>
@@ -169,39 +169,31 @@
                     <span class="info-label">Solicitante:</span> 
                     {{ $ticket->user->name }}
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Fecha de creación:</span> 
+                    {{ $ticket->created_at->format('d/m/Y H:i') }}
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado:</span> 
+                    <span class="badge">PENDIENTE</span>
+                </div>
             </div>
 
-            <div class="rating-box">
-                <h3 style="margin: 0 0 10px 0; color: #333;">Calificación Recibida</h3>
-                
-                <div class="rating-score">{{ $survey->rating }}/5</div>
-                
-                <div class="stars">
-                    @for($i = 1; $i <= 5; $i++)
-                        @if($i <= $survey->rating)
-                            ⭐
-                        @else
-                            ☆
-                        @endif
-                    @endfor
-                </div>
-
-                @if($survey->comments)
-                <div class="comment-box">
-                    <strong>Comentarios del solicitante:</strong><br>
-                    "{{ $survey->comments }}"
-                </div>
-                @endif
+            @if($ticket->description)
+            <div class="description-box">
+                <div class="description-title">Descripción:</div>
+                <div class="description-content">{{ $ticket->description }}</div>
             </div>
+            @endif
 
             <p style="text-align: center;">
                 <a href="{{ url('/almacen/tickets/' . $ticket->id) }}" class="button">
-                    VER TICKET
+                    VER Y ASIGNAR TICKET
                 </a>
             </p>
 
             <p style="color: #666666; font-size: 14px;">
-                ¡Gracias por tu excelente trabajo! Esta retroalimentación nos ayuda a mejorar continuamente.
+                Por favor, revisa y asigna este ticket lo antes posible.
             </p>
         </div>
         

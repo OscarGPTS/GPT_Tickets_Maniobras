@@ -8,11 +8,14 @@ use App\Models\TicketImage;
 use App\Models\Survey;
 use App\Exports\TicketsExport;
 use App\Notifications\TicketAssignedNotification;
+use App\Notifications\TicketAssignedToWarehouseNotification;
 use App\Notifications\TicketCompletedNotification;
+use App\Mail\TicketCompletedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
@@ -147,6 +150,14 @@ class TicketController extends Controller
                 Log::error('Error al enviar notificación de ticket asignado: ' . $e->getMessage());
             }
 
+            // Notificar a la persona asignada de almacén
+            try {
+                $ticket->assignedTo->notify(new TicketAssignedToWarehouseNotification($ticket));
+                Log::info('Notificación de asignación enviada al miembro de almacén #' . $ticket->assignedTo->id . ' para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación al miembro de almacén asignado: ' . $e->getMessage());
+            }
+
             DB::commit();
 
             if (Auth::user()->isAdmin()) {
@@ -265,10 +276,15 @@ class TicketController extends Controller
                 'comments' => null,
             ]);
 
-            // Notificar al usuario solicitante
+            // Notificar al usuario solicitante con CC a jrlara@gptservices.com y al asignado
             try {
+                Mail::to($ticket->user->email)
+                    ->send(new TicketCompletedMail($ticket, $ticket->user));
+                
+                // También enviar notificación de base de datos
                 $ticket->user->notify(new TicketCompletedNotification($ticket));
-                Log::info('Notificación de ticket completado enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
+                
+                Log::info('Notificación de ticket completado enviada al usuario #' . $ticket->user_id . ' con CC a jrlara@gptservices.com y al asignado para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificación de ticket completado: ' . $e->getMessage());
             }

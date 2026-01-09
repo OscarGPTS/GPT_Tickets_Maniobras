@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketCancelledNotification extends Notification implements ShouldQueue
+class TicketCancelledNotification extends Notification
 {
     use Queueable;
 
@@ -39,7 +39,7 @@ class TicketCancelledNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Ticket cancelado #' . $this->ticket->id)
+            ->subject('[Movimiento de Carga] Ticket cancelado #' . $this->ticket->id)
             ->view('emails.tickets.cancelled', [
                 'ticket' => $this->ticket,
                 'recipient' => $notifiable,

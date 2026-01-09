@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SurveyCompletedNotification extends Notification implements ShouldQueue
+class SurveyCompletedNotification extends Notification
 {
     use Queueable;
 
@@ -29,8 +29,7 @@ class SurveyCompletedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        // return ['mail', 'database']; // Descomentar para activar emails
-        return ['database']; // Solo base de datos por ahora
+        return ['database', 'mail'];
     }
 
     /**
@@ -39,7 +38,7 @@ class SurveyCompletedNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Ticket calificado #' . $this->survey->ticket->id)
+            ->subject('[Movimiento de Carga] Ticket calificado #' . $this->survey->ticket->id)
             ->view('emails.tickets.survey-completed', [
                 'ticket' => $this->survey->ticket,
                 'survey' => $this->survey,
