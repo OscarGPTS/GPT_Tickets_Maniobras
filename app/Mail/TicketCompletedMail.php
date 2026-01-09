@@ -30,15 +30,20 @@ class TicketCompletedMail extends Mailable
      */
     public function envelope(): Envelope
     {
-        $ccRecipients = ['jrlara@gptservices.com'];
+        // Obtener todos los admins para CC
+        $admins = \App\Models\User::role('admin')->get();
+        $ccRecipients = $admins->pluck('email')->toArray();
         
         // Agregar al asignado en CC si existe y no es el destinatario principal
         if ($this->ticket->assignedTo && $this->ticket->assignedTo->email !== $this->recipient->email) {
             $ccRecipients[] = $this->ticket->assignedTo->email;
         }
+        
+        // Remover duplicados
+        $ccRecipients = array_unique($ccRecipients);
 
         return new Envelope(
-            subject: 'Ticket Completado #' . $this->ticket->id,
+            subject: '[Movimiento de Carga] Ticket Completado #' . $this->ticket->id,
             cc: $ccRecipients
         );
     }

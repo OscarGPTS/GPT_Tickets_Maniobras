@@ -118,26 +118,15 @@ class TicketController extends Controller
                 }
             }
 
-            // Notificar a todos los usuarios de almacén
+            // Notificar SOLO a los usuarios con rol admin
             try {
-                $almacenUsers = User::role('almacen')->get();
-                if ($almacenUsers->count() > 0) {
-                    Notification::send($almacenUsers, new TicketCreatedNotification($ticket));
-                    Log::info('Notificación enviada a ' . $almacenUsers->count() . ' usuarios de almacén para ticket #' . $ticket->id);
+                $admins = User::role('admin')->get();
+                if ($admins->count() > 0) {
+                    Notification::send($admins, new TicketCreatedNotification($ticket));
+                    Log::info('Notificación enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificaciones de ticket creado: ' . $e->getMessage());
-            }
-
-            // Notificar a jrlara@gptservices.com para aprobación y creación
-            try {
-                Notification::route('mail', 'jrlara@gptservices.com')
-                    ->notify(new TicketCreatedNotification($ticket));
-                Notification::route('mail', 'jrlara@gptservices.com')
-                    ->notify(new TicketPendingApprovalNotification($ticket));
-                Log::info('Notificaciones de creación y aprobación enviadas a jrlara@gptservices.com para ticket #' . $ticket->id);
-            } catch (\Exception $e) {
-                Log::error('Error al enviar notificaciones a jrlara@gptservices.com: ' . $e->getMessage());
             }
             
             DB::commit();

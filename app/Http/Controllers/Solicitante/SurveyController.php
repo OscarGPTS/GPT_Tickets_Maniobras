@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Solicitante;
 
 use App\Http\Controllers\Controller;
 use App\Models\Survey;
+use App\Models\User;
 use App\Notifications\SurveyCompletedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class SurveyController extends Controller
 {
@@ -139,24 +141,16 @@ class SurveyController extends Controller
                 'completed_at' => now(),
             ]);
 
-            // Notificar al miembro de almacén y a jrlara
+            // Notificar a todos los admins
             $ticket = $survey->ticket;
-            if ($ticket->assignedTo) {
-                try {
-                    $ticket->assignedTo->notify(new SurveyCompletedNotification($survey));
-                    Log::info('Notificación de encuesta completada enviada al usuario #' . $ticket->assigned_to . ' para ticket #' . $ticket->id);
-                } catch (\Exception $e) {
-                    Log::error('Error al enviar notificación de encuesta completada: ' . $e->getMessage());
-                }
-            }
-            
-            // Notificar a jrlara@gptservices.com
             try {
-                Notification::route('mail', 'jrlara@gptservices.com')
-                    ->notify(new SurveyCompletedNotification($survey));
-                Log::info('Notificación de encuesta completada enviada a jrlara@gptservices.com para ticket #' . $ticket->id);
+                $admins = User::role('admin')->get();
+                if ($admins->count() > 0) {
+                    Notification::send($admins, new SurveyCompletedNotification($survey));
+                    Log::info('Notificación de encuesta completada enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
+                }
             } catch (\Exception $e) {
-                Log::error('Error al enviar notificación de encuesta a jrlara: ' . $e->getMessage());
+                Log::error('Error al enviar notificación de encuesta completada: ' . $e->getMessage());
             }
 
             DB::commit();
