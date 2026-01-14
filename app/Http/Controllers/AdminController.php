@@ -8,6 +8,7 @@ use App\Models\Survey;
 use App\Exports\TicketsExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Spatie\Permission\Models\Role;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -150,6 +151,52 @@ class AdminController extends Controller
         $roles = ['admin', 'almacen', 'solicitante'];
 
         return view('admin.users.index', compact('users', 'roles'));
+    }
+
+    /**
+     * Mostrar formulario para crear nuevo usuario
+     */
+    public function createUser()
+    {
+        $this->checkAdminPermission();
+
+        $roles = ['admin', 'almacen', 'solicitante'];
+        
+        return view('admin.users.create', compact('roles'));
+    }
+
+    /**
+     * Almacenar nuevo usuario en la base de datos
+     */
+    public function storeUser(Request $request)
+    {
+        $this->checkAdminPermission();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'nullable|string|min:8|confirmed',
+            'external_id' => ['nullable', 'string', Rule::unique('users', 'provider_id')],
+            'roles' => 'required|array|min:1',
+            'roles.*' => 'required|in:admin,almacen,solicitante',
+        ]);
+
+        // Generar contraseña aleatoria si no se proporciona (usuarios Auth0/Google)
+        $password = $request->filled('password') ? $request->password : \Str::random(16);
+
+        // Crear nuevo usuario
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($password),
+            'provider_id' => $request->external_id, // ID del sistema externo
+        ]);
+
+        // Asignar roles
+        $user->syncRoles($request->roles);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "Usuario {$user->name} creado exitosamente.");
     }
 
     /**
@@ -346,5 +393,35 @@ class AdminController extends Controller
         $filename = 'tickets_' . now()->format('Y-m-d_His') . '.xlsx';
 
         return Excel::download(new TicketsExport($filters), $filename);
+    }
+
+    /**
+     * Obtener usuarios desde la API externa (para select en crear usuarios)
+     */
+    public function fetchExternalUsers(Request $request)
+    {
+        $this->checkAdminPermission();
+
+        try {
+            $response = Http::withoutVerifying()
+                ->timeout(30)
+                ->get('https://services.satechenergy.com/api/rh/users');
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al conectar con la API externa'
+                ], 500);
+            }
+
+            $data = $response->json();
+
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

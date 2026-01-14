@@ -26,6 +26,12 @@ Route::middleware(['auth', 'admin'])
         // Gestión de usuarios
         Route::get('/users', [AdminController::class, 'users'])
             ->name('users.index');
+        Route::get('/users/create', [AdminController::class, 'createUser'])
+            ->name('users.create');
+        Route::post('/users', [AdminController::class, 'storeUser'])
+            ->name('users.store');
+        Route::get('/users/fetch-external', [AdminController::class, 'fetchExternalUsers'])
+            ->name('users.fetch-external');
         Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])
             ->name('users.edit');
         Route::put('/users/{user}', [AdminController::class, 'updateUser'])

@@ -92,7 +92,7 @@
                 <p class="text-sm text-gray-600 mt-1">Actualiza los datos del usuario y asigna el rol apropiado</p>
             </div>
 
-            <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-6">
+            <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-6" onsubmit="return validateForm();">
                 @csrf
                 @method('PUT')
 
@@ -108,7 +108,7 @@
                                id="name" 
                                value="{{ old('name', $user->name) }}"
                                required
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-300 @enderror">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('name') border-red-300 @enderror">
                         @error('name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -124,7 +124,7 @@
                                id="email" 
                                value="{{ old('email', $user->email) }}"
                                required
-                               class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('email') border-red-300 @enderror">
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 @error('email') border-red-300 @enderror">
                         @error('email')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -133,7 +133,7 @@
                 </div>
 
                 <!-- Roles -->
-                <div class="mt-6">
+                <div class="mt-8">
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Roles del Usuario <span class="text-red-500">*</span>
                     </label>
@@ -148,42 +148,58 @@
                                        value="{{ $role }}" 
                                        {{ $user->hasRole($role) ? 'checked' : '' }}
                                        class="peer sr-only">
-                                <label for="role_{{ $role }}" 
-                                       class="block w-full p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50 transition-colors">
-                                    <div class="flex items-center">
-                                        <div class="w-5 h-5 border-2 border-gray-300 rounded peer-checked:border-blue-500 peer-checked:bg-blue-500 mr-3 flex items-center justify-center">
-                                            <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <p class="font-semibold text-gray-900">{{ ucfirst($role) }}</p>
-                                            <p class="text-sm text-gray-600">
-                                                @if($role === 'admin')
-                                                    Acceso completo al sistema y gestión de usuarios
-                                                @elseif($role === 'almacen')
-                                                    Gestión de tickets y almacén
-                                                @else
-                                                    Creación y seguimiento de tickets
-                                                @endif
-                                            </p>
-                                        </div>
-                                    </div>
+                                <label for="role_{{ $role }}" class="flex flex-col items-start p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 peer-checked:border-blue-500 peer-checked:bg-blue-50">
+                                    <span class="text-sm font-medium text-gray-900">
+                                        @if($role === 'admin')
+                                            <span class="flex items-center">
+                                                <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-red-100 text-red-800 mr-2">
+                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5.951-1.429 5.951 1.429a1 1 0 001.169-1.409l-7-14z"/>
+                                                    </svg>
+                                                </span>
+                                                Administrador
+                                            </span>
+                                        @elseif($role === 'almacen')
+                                            <span class="flex items-center">
+                                                <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-100 text-blue-800 mr-2">
+                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                                                    </svg>
+                                                </span>
+                                                Almacén
+                                            </span>
+                                        @else
+                                            <span class="flex items-center">
+                                                <span class="inline-flex items-center justify-center h-6 w-6 rounded-full bg-green-100 text-green-800 mr-2">
+                                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                                                    </svg>
+                                                </span>
+                                                Solicitante
+                                            </span>
+                                        @endif
+                                    </span>
+                                    <span class="text-xs text-gray-600 mt-2">
+                                        @if($role === 'admin')
+                                            Acceso completo al panel administrativo
+                                        @elseif($role === 'almacen')
+                                            Gestiona tickets y entregas
+                                        @else
+                                            Puede crear y ver sus solicitudes
+                                        @endif
+                                    </span>
                                 </label>
                             </div>
                         @endforeach
 
                     </div>
                     @error('roles')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
-                    @error('roles.*')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <!-- Información Adicional -->
-                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <div class="flex">
                         <div class="flex-shrink-0">
                             <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -261,4 +277,15 @@
 
     </div>
 </div>
+
+<script>
+    function validateForm() {
+        const roles = document.querySelectorAll('input[name="roles[]"]:checked');
+        if (roles.length === 0) {
+            alert('Debes seleccionar al menos un rol para el usuario.');
+            return false;
+        }
+        return true;
+    }
+</script>
 @endsection

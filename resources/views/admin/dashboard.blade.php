@@ -14,9 +14,58 @@
                         <h1 class="text-3xl font-bold text-gray-900">Panel Administrativo</h1>
                         <p class="text-gray-600 mt-2">Gestiona usuarios, roles y supervisa el sistema</p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">Última actualización</p>
-                        <p class="text-lg font-semibold text-gray-900">{{ now()->format('d/m/Y H:i') }}</p>
+                    <div class="flex items-center justify-between flex-col sm:flex-row gap-4">
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Última actualización</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ now()->format('d/m/Y H:i') }}</p>
+                        </div>
+                        
+                        <!-- Botón de Configuración con Dropdown -->
+                        <div class="relative group">
+                            <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md shadow-sm text-sm font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Configuración
+                                <svg class="w-4 h-4 ml-2 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                <div class="py-2">
+                                    <a href="{{ route('admin.users.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                                        <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 12H9m4 0a3 3 0 01-3 3H9m0-6a3 3 0 013-3h1m-6 3v2a3 3 0 003 3h1"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Gestión de Usuarios</div>
+                                            <div class="text-xs text-gray-500">Crear, editar y asignar roles</div>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('admin.statistics') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition border-t border-gray-100">
+                                        <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Estadísticas Avanzadas</div>
+                                            <div class="text-xs text-gray-500">Reportes detallados del sistema</div>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('admin.tickets.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition border-t border-gray-100">
+                                        <svg class="w-5 h-5 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Todos los Tickets</div>
+                                            <div class="text-xs text-gray-500">Visualizar y filtrar tickets</div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
