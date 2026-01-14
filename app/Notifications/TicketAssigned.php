@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TicketAssigned extends Notification implements ShouldQueue
+class TicketAssigned extends Notification
 {
     use Queueable;
 
@@ -26,7 +26,8 @@ class TicketAssigned extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // return ['mail', 'database']; // Descomentar para activar emails
+        return ['database']; // Solo base de datos por ahora
     }
 
     /**
@@ -35,14 +36,12 @@ class TicketAssigned extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Tu solicitud ha sido asignada')
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('Tu solicitud de movimiento de carga ha sido asignada a un miembro del equipo de almacén.')
-            ->line('**Título:** ' . $this->ticket->title)
-            ->line('**Asignada a:** ' . $this->ticket->assignedTo->name)
-            ->line('**Estado:** En proceso')
-            ->action('Ver Solicitud', url('/tickets/' . $this->ticket->id))
-            ->line('Te notificaremos cuando el trabajo sea completado.');
+            ->subject('[Movimiento de Carga] Ticket asignado #' . $this->ticket->id)
+            ->view('emails.tickets.assigned', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+                'assignedBy' => \Illuminate\Support\Facades\Auth::user() ?? $this->ticket->assignedTo,
+            ]);
     }
 
     /**

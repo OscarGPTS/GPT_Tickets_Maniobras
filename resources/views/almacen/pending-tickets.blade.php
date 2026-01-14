@@ -15,6 +15,11 @@
                         <p class="text-gray-600 mt-2">Gestiona y asigna tickets que están esperando atención</p>
                     </div>
                     <div class="flex space-x-3">
+                        <button onclick="document.getElementById('exportForm').submit()" 
+                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm text-sm font-medium hover:bg-green-700">
+                            <i class="fas fa-file-excel mr-2"></i>
+                            Exportar Excel
+                        </button>
                         <a href="{{ route('almacen.dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -25,6 +30,11 @@
                 </div>
             </div>
         </div>
+
+        <!-- Formulario de exportación (oculto) -->
+        <form id="exportForm" action="{{ route('almacen.tickets.export') }}" method="GET" class="hidden">
+            <input type="hidden" name="status" value="pendiente">
+        </form>
 
         <!-- Estadísticas Rápidas -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -89,24 +99,11 @@
                             <div class="flex-1">
                                 <div class="flex items-center space-x-3 mb-3">
                                     <h4 class="text-lg font-semibold text-gray-900">
-                                        #{{ $ticket->id }} - {{ $ticket->title }}
+                                        {{ $ticket->formatted_code }} - {{ $ticket->title }}
                                     </h4>
                                     <span class="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
                                         Pendiente
                                     </span>
-                                    @if($ticket->priority === 'alta')
-                                        <span class="inline-flex px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                            Prioridad Alta
-                                        </span>
-                                    @elseif($ticket->priority === 'media')
-                                        <span class="inline-flex px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                                            Prioridad Media
-                                        </span>
-                                    @else
-                                        <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                            Prioridad Baja
-                                        </span>
-                                    @endif
                                 </div>
 
                                 <p class="text-gray-700 mb-3">{{ Str::limit($ticket->description, 200) }}</p>
@@ -145,16 +142,29 @@
                                     Ver Detalles
                                 </a>
                                 
-                                <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}" class="inline">
-                                    @csrf
-                                    <button type="submit" 
-                                            class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                @if(auth()->user()->isAlmacen())
+                                    <!-- Botón auto-asignación para personal de almacén -->
+                                    <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}" class="inline">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            </svg>
+                                            Asignar a Mí
+                                        </button>
+                                    </form>
+                                @else
+                                    <!-- Botón para abrir modal de asignación (Admin) -->
+                                    <button type="button" 
+                                            onclick="openAssignModal({{ $ticket->id }}, '{{ addslashes($ticket->title) }}')"
+                                            class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                         </svg>
-                                        Asignar a Mí
+                                        Asignar
                                     </button>
-                                </form>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -185,4 +195,94 @@
 
     </div>
 </div>
+
+<!-- Modal de Asignación -->
+@if(auth()->user()->isAdmin() && $almacenUsers)
+<div id="assignModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">
+                    <i class="fas fa-user-plus text-green-600 mr-2"></i>
+                    Asignar Ticket
+                </h3>
+                <button onclick="closeAssignModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Información del ticket -->
+            <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p class="text-sm text-gray-600">Ticket:</p>
+                <p class="font-semibold text-gray-900" id="modalTicketTitle"></p>
+            </div>
+
+            <!-- Formulario -->
+            <form id="assignForm" method="POST" action="">
+                @csrf
+                <div class="mb-4">
+                    <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">
+                        Seleccionar responsable:
+                    </label>
+                    <select id="assigned_to" 
+                            name="assigned_to" 
+                            required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 rounded-md">
+                        <option value="">-- Seleccionar personal de almacén --</option>
+                        @foreach($almacenUsers as $user)
+                            <option value="{{ $user->id }}">
+                                {{ $user->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="button" 
+                            onclick="closeAssignModal()"
+                            class="flex-1 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                        <i class="fas fa-check mr-2"></i>
+                        Asignar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAssignModal(ticketId, ticketTitle) {
+    document.getElementById('assignModal').classList.remove('hidden');
+    document.getElementById('modalTicketTitle').textContent = '#' + ticketId + ' - ' + ticketTitle;
+    document.getElementById('assignForm').action = '/almacen/tickets/' + ticketId + '/assign';
+}
+
+function closeAssignModal() {
+    document.getElementById('assignModal').classList.add('hidden');
+    document.getElementById('assigned_to').value = '';
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('assignModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAssignModal();
+    }
+});
+
+// Cerrar modal con tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAssignModal();
+    }
+});
+</script>
+@endif
+
 @endsection

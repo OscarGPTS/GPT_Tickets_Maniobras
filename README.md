@@ -1,323 +1,275 @@
-# Sistema de Tickets para Movimiento de Cargas
+# Sistema de Gestión de Tickets
 
-Un sistema completo para gestionar solicitudes de movimiento de carga dentro de una organización, desarrollado con Laravel, Auth0, y Tailwind CSS.
+Sistema de tickets desarrollado con Laravel 11 para administración de solicitudes de movimiento de carga con autenticación por Auth0/Google OAuth, gestión de roles y encuestas de satisfacción.
 
-## 🚀 Características
+## Requisitos
 
-- **Autenticación con Auth0 + Google**: Login seguro con cuentas corporativas de Google
-- **Gestión de Roles**: Usuarios normales, personal de almacén y administradores
-- **Sistema de Tickets**: Creación, asignación y seguimiento de solicitudes
-- **Carga de Imágenes**: Soporte para evidencias visuales en solicitudes y respuestas
-- **Encuestas de Satisfacción**: Sistema obligatorio de feedback para usuarios
-- **Notificaciones**: Alertas automáticas por email y en la aplicación
-- **Dashboard Interactivo**: Métricas y estadísticas en tiempo real
-- **Responsive Design**: Compatible con dispositivos móviles y escritorio
+- PHP 8.2 o superior
+- MySQL 5.7+ o MariaDB 10.3+
+- Composer 2.x
+- Node.js 18+ y NPM
+- Cuenta configurada en Auth0
+- Aplicación OAuth2 configurada en Google Cloud Console
 
-## 🏗️ Arquitectura del Sistema
+## Instalación
 
-### Roles de Usuario
-
-1. **Usuario Solicitante**
-   - Crear solicitudes de movimiento de carga
-   - Subir imágenes descriptivas
-   - Recibir notificaciones del progreso
-   - Completar encuestas de satisfacción
-
-2. **Personal de Almacén**
-   - Ver solicitudes pendientes
-   - Asignar solicitudes a sí mismos
-   - Subir evidencias del trabajo realizado
-   - Marcar solicitudes como completadas
-
-3. **Administradores**
-   - Acceso completo al sistema
-   - Métricas y reportes avanzados
-   - Gestión de usuarios y configuraciones
-
-### Flujo de Trabajo
-
-1. **Creación**: Usuario crea solicitud con descripción e imágenes
-2. **Notificación**: El equipo de almacén recibe notificación automática
-3. **Asignación**: Miembro del almacén toma la solicitud
-4. **Proceso**: Se ejecuta el trabajo con evidencias fotográficas
-5. **Finalización**: Se marca como completada y se notifica al usuario
-6. **Encuesta**: Usuario completa encuesta de satisfacción obligatoria
-7. **Nuevo Ciclo**: Usuario puede crear nueva solicitud tras completar encuesta
-
-## 📋 Requisitos del Sistema
-
-- PHP 8.2+
-- MySQL 5.7+ / MariaDB 10.3+
-- Composer
-- Node.js 18+ & NPM
-- Cuenta de Auth0 configurada
-- Aplicación de Google OAuth configurada
-
-## 🛠️ Instalación
-
-### 1. Clonar el Repositorio
+### 1. Clonar repositorio e instalar dependencias
 
 ```bash
-git clone <repository-url>
+git clone <repository-url> GPT_Tickets
 cd GPT_Tickets
-```
-
-### 2. Instalar Dependencias
-
-```bash
-# Instalar dependencias de PHP
 composer install
-
-# Instalar dependencias de Node.js
 npm install
 ```
 
-### 3. Configurar Variables de Entorno
+### 2. Configurar variables de entorno
 
 ```bash
-# Copiar archivo de configuración
 cp .env.example .env
-
-# Generar clave de aplicación
 php artisan key:generate
 ```
 
-### 4. Configurar Base de Datos
-
-Crear base de datos MySQL y actualizar las credenciales en `.env`:
+Editar `.env` con los valores correspondientes:
 
 ```env
+APP_NAME="Sistema de Tickets"
+APP_ENV=local
+APP_KEY=base64:...
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+# Base de datos
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=gpt_tickets
-DB_USERNAME=tu_usuario
-DB_PASSWORD=tu_contraseña
-```
+DB_USERNAME=root
+DB_PASSWORD=
 
-### 5. Configurar Auth0
-
-1. Crear cuenta en [Auth0](https://auth0.com)
-2. Crear una nueva aplicación web
-3. Configurar Google como proveedor social
-4. Actualizar variables en `.env`:
-
-```env
+# Auth0
 AUTH0_DOMAIN=tu-dominio.auth0.com
 AUTH0_CLIENT_ID=tu-client-id
 AUTH0_CLIENT_SECRET=tu-client-secret
 AUTH0_REDIRECT_URI=http://localhost:8000/auth/auth0/callback
+
+# Email (opcional para notificaciones)
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USERNAME=tu_usuario
+MAIL_PASSWORD=tu_password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@tuempresa.com
+MAIL_FROM_NAME="Sistema de Tickets"
 ```
 
-### 6. Configurar Google OAuth
+### 3. Configurar base de datos
 
-1. Ir a [Google Cloud Console](https://console.cloud.google.com)
-2. Crear proyecto y habilitar Google+ API
-3. Crear credenciales OAuth 2.0
-4. Configurar en Auth0 como proveedor social
+```bash
+php artisan migrate
+php artisan db:seed
+php artisan storage:link
+```
 
-### 7. Ejecutar Migraciones
+### 4. Compilar assets
+
+```bash
+npm run dev
+# o para producción:
+npm run build
+```
+
+### 5. Ejecutar servidor
+
+```bash
+php artisan serve
+```
+
+El sistema estará disponible en http://localhost:8000
+
+## Estructura del Sistema
+
+### Roles de Usuario
+
+- **Admin**: Acceso completo a gestión de usuarios, visualización de tickets, estadísticas y configuración del sistema.
+- **Almacén**: Puede ver, actualizar y completar tickets asignados. Visualiza estadísticas de desempeño.
+- **Solicitante**: Puede crear nuevas solicitudes (tickets) y dar seguimiento a su estado.
+
+### Flujo de Tickets
+
+1. Solicitante crea ticket con descripción e imágenes (máximo 5)
+2. Admin visualiza y asigna a miembro de almacén
+3. Almacén recibe notificación y actualiza estado
+4. Al finalizar, carga evidencias fotográficas
+5. Solicitante completa encuesta de satisfacción
+6. Admin monitorea métricas de satisfacción
+
+### Estados de Ticket
+
+- **Pendiente**: Esperando asignación
+- **En Proceso**: Asignado y en ejecución
+- **Finalizado**: Completado exitosamente
+- **Cancelado**: Cancelado por motivos diversos
+
+## Gestión de Usuarios
+
+### Panel de Administración
+
+Acceder a `/admin/dashboard` para:
+
+- Ver estadísticas del sistema
+- Gestionar usuarios (crear, editar, eliminar)
+- Asignar roles a usuarios
+- Monitorear tickets pendientes
+- Visualizar métricas de satisfacción
+
+### Alta de Usuarios
+
+En `/admin/users/create`:
+
+- Importar usuarios de API externa (sistema principal)
+- Los datos se cargan automáticamente al abrir la página
+- Seleccionar usuario y completar el formulario
+- Asignar uno o más roles
+- Sistema valida que no existan duplicados por email
+
+### Integración con API Externa
+
+El sistema carga automáticamente usuarios desde:
+
+```
+https://services.satechenergy.com/api/rh/users
+```
+
+Campos sincronizados: nombre completo, email, puesto, departamento, área.
+
+## Notificaciones
+
+Todas las notificaciones se almacenan en base de datos. Los eventos notificables incluyen:
+
+- Ticket creado
+- Ticket asignado
+- Ticket en progreso
+- Ticket completado
+- Ticket cancelado
+- Encuesta pendiente de completar
+- Encuesta completada
+
+Las notificaciones por email son opcionales y se configuran en `.env`.
+
+## Seguridad
+
+### Middleware de Autenticación
+
+- Todas las rutas requieren autenticación con Auth0/Google
+- Validación de roles mediante `Spatie\Permission`
+- Protección CSRF en formularios
+- Validación de entrada en todos los formularios
+
+### Mejores Prácticas Implementadas
+
+1. **Validación**: Todos los formularios validan entrada antes de procesamiento
+2. **Autorización**: Controladores verifican permisos antes de ejecutar acciones
+3. **Encriptación**: Contraseñas se encriptan con bcrypt
+4. **Logs**: Todas las acciones críticas se registran en logs
+5. **Paginación**: Listados usan paginación para optimizar rendimiento
+6. **Modelos**: Relaciones y scopes optimizados para query efficiency
+
+## Configuración de Auth0
+
+1. Crear aplicación tipo "Regular Web Application" en Auth0
+2. Configurar "Allowed Callback URLs":
+   ```
+   http://localhost:8000/auth/auth0/callback
+   ```
+3. Configurar "Allowed Logout URLs":
+   ```
+   http://localhost:8000
+   ```
+4. Copiar Domain, Client ID y Client Secret a `.env`
+
+## Desarrollo
+
+### Estructura de Carpetas
+
+```
+app/
+  ├── Http/Controllers/
+  │   ├── AdminController.php          # Gestión admin y usuarios
+  │   ├── TicketController.php         # Lógica de tickets
+  │   └── Auth/GoogleAuthController.php
+  ├── Models/
+  │   ├── User.php
+  │   ├── Ticket.php
+  │   ├── Survey.php
+  │   └── TicketImage.php
+  └── Notifications/                   # Notificaciones
+resources/
+  └── views/
+      ├── admin/                       # Panel administrativo
+      ├── tickets/                     # Gestión de tickets
+      └── layouts/
+routes/
+  ├── admin.php                        # Rutas admin
+  ├── auth.php                         # Rutas de autenticación
+  └── web.php                          # Rutas públicas
+```
+
+### Comandos Útiles
 
 ```bash
 # Ejecutar migraciones
 php artisan migrate
 
-# Ejecutar seeders (opcional)
+# Crear modelo con migraciones
+php artisan make:model NombreModelo -m
+
+# Ejecutar seeders
 php artisan db:seed
-```
 
-### 8. Configurar Storage
-
-```bash
-# Crear enlace simbólico para archivos públicos
-php artisan storage:link
-```
-
-### 9. Compilar Assets
-
-```bash
-# Desarrollo
-npm run dev
-
-# Producción
-npm run build
-```
-
-### 10. Iniciar Servidor
-
-```bash
-# Servidor de desarrollo
-php artisan serve
-
-# La aplicación estará disponible en: http://localhost:8000
-```
-
-## ⚙️ Configuración Adicional
-
-### Correo Electrónico
-
-Para habilitar notificaciones por email, configurar SMTP en `.env`:
-
-```env
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=587
-MAIL_USERNAME=tu-email@gmail.com
-MAIL_PASSWORD=tu-app-password
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="noreply@tudominio.com"
-MAIL_FROM_NAME="Sistema de Tickets"
-```
-
-### Colas de Trabajo (Opcional)
-
-Para procesar notificaciones en segundo plano:
-
-```bash
-# Configurar driver de cola
-QUEUE_CONNECTION=database
-
-# Crear tabla de trabajos
-php artisan queue:table
-php artisan migrate
-
-# Ejecutar worker
-php artisan queue:work
-```
-
-### Configuración de Roles
-
-Por defecto, todos los usuarios nuevos tienen rol "user". Para asignar roles de almacén:
-
-1. Acceder a la base de datos
-2. Actualizar campo `role` en tabla `users`:
-   - `'user'` - Usuario normal
-   - `'almacen'` - Personal de almacén
-   - `'admin'` - Administrador
-
-```sql
-UPDATE users SET role = 'almacen' WHERE email = 'empleado@empresa.com';
-UPDATE users SET role = 'admin' WHERE email = 'admin@empresa.com';
-```
-
-## 🗄️ Estructura de Base de Datos
-
-### Tablas Principales
-
-- **users**: Información de usuarios y roles
-- **tickets**: Solicitudes de movimiento de carga
-- **ticket_images**: Imágenes asociadas a tickets
-- **surveys**: Encuestas de satisfacción
-- **notifications**: Notificaciones del sistema
-
-### Relaciones
-
-- Usuario → Muchos Tickets
-- Ticket → Muchas Imágenes
-- Ticket → Una Encuesta
-- Usuario → Muchas Notificaciones
-
-## 🔧 Comandos Artisan Útiles
-
-```bash
-# Limpiar caché
-php artisan cache:clear
-php artisan config:clear
+# Limpiar caches
+php artisan optimize:clear
 php artisan view:clear
 
-# Verificar configuración
-php artisan config:show
-
-# Ver rutas
+# Ver rutas registradas
 php artisan route:list
-
-# Ejecutar migraciones frescas
-php artisan migrate:fresh --seed
 ```
 
-## 📱 Uso del Sistema
+## Testing
 
-### Para Usuarios
-
-1. **Acceder**: Ir a `/login` y autenticarse con Google
-2. **Crear Ticket**: Usar botón "Nueva Solicitud" en dashboard
-3. **Seguimiento**: Ver progreso en "Mis Tickets"
-4. **Encuestas**: Completar encuestas pendientes para crear nuevos tickets
-
-### Para Personal de Almacén
-
-1. **Panel**: Acceder a "Panel Almacén" en navegación
-2. **Tickets Pendientes**: Ver todas las solicitudes sin asignar
-3. **Tomar Ticket**: Asignarse solicitudes para trabajar
-4. **Completar**: Subir evidencias y marcar como finalizado
-
-### Para Administradores
-
-1. **Dashboard Admin**: Métricas completas del sistema
-2. **Reportes**: Estadísticas de satisfacción y eficiencia
-3. **Gestión**: Control total sobre usuarios y configuraciones
-
-## 🛡️ Seguridad
-
-- **Autenticación OAuth**: Solo usuarios con cuentas Google autorizadas
-- **Autorización por Roles**: Acceso controlado por funciones
-- **Validación de Archivos**: Verificación de tipo y tamaño de imágenes
-- **Protección CSRF**: Protección contra ataques de falsificación
-- **Sanitización**: Limpieza de entradas de usuario
-
-## 📊 Métricas y Reportes
-
-El sistema incluye dashboards con:
-
-- **Tickets por Estado**: Pendientes, en proceso, completados
-- **Tiempo de Respuesta**: Métricas de eficiencia del almacén
-- **Satisfacción del Cliente**: Promedios de calificaciones
-- **Productividad**: Tickets completados por empleado
-- **Tendencias**: Gráficos de actividad temporal
-
-## 🚀 Despliegue en Producción
-
-### Lista de Verificación
-
-- [ ] Configurar base de datos de producción
-- [ ] Actualizar variables de entorno
-- [ ] Configurar servidor web (Apache/Nginx)
-- [ ] Habilitar HTTPS
-- [ ] Configurar cron jobs para colas
-- [ ] Establecer backups automáticos
-- [ ] Configurar monitoreo de logs
-
-### Variables de Entorno Críticas
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://tudominio.com
-AUTH0_DOMAIN=tu-dominio-prod.auth0.com
-MAIL_MAILER=smtp
-QUEUE_CONNECTION=redis
+```bash
+php artisan test
 ```
 
-## 🤝 Contribuir
+## Producción
 
-1. Fork del repositorio
-2. Crear rama para nueva característica
-3. Realizar cambios y pruebas
-4. Enviar pull request
+### Checklist Pre-Deployment
 
-## 📝 Licencia
+- [ ] `APP_DEBUG=false` en `.env`
+- [ ] `APP_ENV=production` en `.env`
+- [ ] Ejecutar `php artisan optimize`
+- [ ] Ejecutar `php artisan config:cache`
+- [ ] Ejecutar `php artisan route:cache`
+- [ ] Ejecutar `npm run build` para assets
+- [ ] Verificar permisos de carpeta `storage/` y `bootstrap/cache/`
+- [ ] Configurar dominio en Auth0
+- [ ] Backup de base de datos configurado
 
-Este proyecto está licenciado bajo la Licencia MIT.
+### Deploy
 
-## 🆘 Soporte
+```bash
+git pull origin main
+composer install --no-dev --optimize-autoloader
+npm run build
+php artisan migrate --force
+php artisan optimize
+php artisan queue:restart
+```
 
-Para soporte técnico:
+## Soporte
 
-1. Revisar documentación
-2. Verificar logs en `storage/logs/laravel.log`
-3. Consultar issues en GitHub
-4. Contactar al equipo de desarrollo
+Para reportar issues o solicitar features, crear un issue en el repositorio con descripción detallada.
 
----
+## Licencia
 
-**Sistema de Tickets v1.0** - Desarrollado con ❤️ para optimizar la gestión de almacenes
+Propietario

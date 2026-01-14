@@ -1,14 +1,14 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Solicitante;
 
+use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketImage;
 use App\Models\User;
-use App\Models\Survey;
-use App\Notifications\TicketCreated;
-use App\Notifications\TicketAssigned;
-use App\Notifications\TicketCompleted;
+use App\Notifications\TicketCreatedNotification;
+use App\Notifications\TicketCancelledNotification;
+use App\Notifications\TicketPendingApprovalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -19,34 +19,63 @@ use Illuminate\Support\Facades\Log;
 class TicketController extends Controller
 {
     /**
-     * Display a listing of the user's tickets.
+     * Constructor
      */
-    public function index()
+    public function __construct()
     {
-        $tickets = Auth::user()->tickets()
-            ->with(['assignedTo', 'images', 'survey'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('tickets.index', compact('tickets'));
+        $this->middleware('auth');
     }
 
     /**
-     * Show the form for creating a new ticket.
+     * Listar tickets del usuario
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        
+        $query = $user->tickets()
+            ->with(['assignedTo', 'images', 'survey'])
+            ->orderByRaw("CASE WHEN status = 'pendiente' THEN 0 WHEN status = 'en_proceso' THEN 1 ELSE 2 END")
+            ->orderByDesc('created_at'); // Más recientes primero
+
+        // Filtrar por estado si se proporciona
+        if ($request->has('status') && $request->status) {
+            $query->where('status', $request->status);
+        }
+
+        // Paginación con parámetros persistentes
+        $tickets = $query->paginate(15)->appends($request->except('page'));
+
+        // Encuestas pendientes
+        $pendingSurveys = \App\Models\Survey::whereHas('ticket', function($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })
+        ->whereNull('completed_at')
+        ->with('ticket.assignedTo')
+        ->get();
+
+        // Verificar si puede crear un nuevo ticket
+        $canCreateTicket = $user->canCreateTicket();
+
+        return view('solicitante.tickets.index', compact('tickets', 'pendingSurveys', 'canCreateTicket'));
+    }
+
+    /**
+     * Formulario para crear ticket
      */
     public function create()
     {
         // Verificar si el usuario puede crear un nuevo ticket
         if (!Auth::user()->canCreateTicket()) {
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('error', 'Debes completar las encuestas pendientes antes de crear un nuevo ticket.');
         }
 
-        return view('tickets.create');
+        return view('solicitante.tickets.create');
     }
 
     /**
-     * Store a newly created ticket in storage.
+     * Guardar nuevo ticket
      */
     public function store(Request $request)
     {
@@ -54,13 +83,13 @@ class TicketController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         // Verificar si el usuario puede crear un ticket
-        if (!Auth::user()->canCreateTicket()) {
-            return back()->withErrors(['error' => 'Debes completar las encuestas pendientes antes de crear un nuevo ticket.']);
-        }
+        /* if (!Auth::user()->canCreateTicket()) {
+            return back()->withErrors(['error' => 'Debes completar las encuestas pendientes ants de crear un nuevo ticket.']);
+        } */
 
         DB::beginTransaction();
         try {
@@ -89,15 +118,23 @@ class TicketController extends Controller
                 }
             }
 
-            // Notificar a todos los usuarios de almacén
+            // Notificar SOLO a los usuarios con rol admin
             try {
-                $almacenUsers = User::where('role', 'almacen')->get();
-                Notification::send($almacenUsers, new TicketCreated($ticket));
+                $admins = User::role('admin')->get();
+                if ($admins->count() > 0) {
+                    try {
+                        Notification::send($admins, new TicketPendingApprovalNotification($ticket));
+                        Log::info('Notificación de ticket pendiente enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
+                    } catch (\Exception $e) {
+                        Log::error('Error al enviar notificación de ticket pendiente: ' . $e->getMessage());
+                    }
+                }
             } catch (\Exception $e) {
-                Log::error('Error al crear el ticket: ' . $e->getMessage());
+                Log::error('Error al enviar notificaciones de ticket creado: ' . $e->getMessage());
             }
+            
             DB::commit();
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('success', 'Ticket creado exitosamente. Se ha notificado al equipo de almacén.');
 
         } catch (\Exception $e) {
@@ -107,22 +144,22 @@ class TicketController extends Controller
     }
 
     /**
-     * Display the specified ticket.
+     * Ver detalle de un ticket
      */
     public function show(Ticket $ticket)
     {
         // Verificar que el usuario puede ver este ticket
-        if ($ticket->user_id !== Auth::id() && !Auth::user()->isAlmacen() && !Auth::user()->isAdmin()) {
+        if ($ticket->user_id !== Auth::id()) {
             abort(403, 'No tienes permiso para ver este ticket.');
         }
 
         $ticket->load(['user', 'assignedTo', 'images', 'survey']);
 
-        return view('tickets.show', compact('ticket'));
+        return view('solicitante.tickets.show', compact('ticket'));
     }
 
     /**
-     * Show the form for editing the specified ticket.
+     * Formulario de edición
      */
     public function edit(Ticket $ticket)
     {
@@ -131,11 +168,11 @@ class TicketController extends Controller
             abort(403, 'No puedes editar este ticket.');
         }
 
-        return view('tickets.edit', compact('ticket'));
+        return view('solicitante.tickets.edit', compact('ticket'));
     }
 
     /**
-     * Update the specified ticket in storage.
+     * Actualizar ticket
      */
     public function update(Request $request, Ticket $ticket)
     {
@@ -177,7 +214,7 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return redirect()->route('tickets.show', $ticket)
+            return redirect()->route('solicitante.tickets.show', $ticket)
                 ->with('success', 'Ticket actualizado exitosamente.');
 
         } catch (\Exception $e) {
@@ -187,7 +224,7 @@ class TicketController extends Controller
     }
 
     /**
-     * Remove the specified ticket from storage.
+     * Eliminar ticket
      */
     public function destroy(Ticket $ticket)
     {
@@ -204,7 +241,7 @@ class TicketController extends Controller
 
             $ticket->delete();
 
-            return redirect()->route('tickets.index')
+            return redirect()->route('solicitante.tickets.index')
                 ->with('success', 'Ticket eliminado exitosamente.');
 
         } catch (\Exception $e) {
@@ -232,6 +269,51 @@ class TicketController extends Controller
 
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Error al eliminar la imagen: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Cancelar un ticket
+     */
+    public function cancel(Request $request, Ticket $ticket)
+    {
+        // Verificar que el usuario es el propietario
+        if ($ticket->user_id !== Auth::id()) {
+            abort(403, 'No puedes cancelar este ticket.');
+        }
+
+        // Verificar que el ticket puede ser cancelado
+        if (!$ticket->canBeCancelled()) {
+            return back()->withErrors(['error' => 'Este ticket no puede ser cancelado en su estado actual.']);
+        }
+
+        $request->validate([
+            'cancellation_reason' => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $cancellationReason = $request->cancellation_reason ?: 'Cancelado';
+            $ticket->cancel($cancellationReason);
+
+            // Notificar al miembro de almacén si estaba asignado
+            if ($ticket->assigned_to) {
+                try {
+                    $ticket->assignedTo->notify(new TicketCancelledNotification($ticket));
+                    Log::info('Notificación de cancelación enviada al usuario #' . $ticket->assigned_to . ' para ticket #' . $ticket->id);
+                } catch (\Exception $e) {
+                    Log::error('Error al enviar notificación de ticket cancelado: ' . $e->getMessage());
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('solicitante.tickets.index')
+                ->with('success', 'Ticket cancelado exitosamente.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Error al cancelar el ticket: ' . $e->getMessage()]);
         }
     }
 }

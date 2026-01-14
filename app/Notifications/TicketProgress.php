@@ -31,7 +31,8 @@ class TicketProgress extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // return ['mail', 'database']; // Descomentar para activar emails
+        return ['database']; // Solo base de datos por ahora
     }
 
     /**
@@ -40,15 +41,11 @@ class TicketProgress extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Progreso en tu Ticket #' . $this->ticket->id)
-            ->greeting('¡Hola ' . $notifiable->name . '!')
-            ->line('Hay una actualización en tu ticket #' . $this->ticket->id . ': ' . $this->ticket->title)
-            ->when($this->progressComment, function ($mail) {
-                return $mail->line('Comentario del técnico: ' . $this->progressComment);
-            })
-            ->line('Estado actual: ' . ucfirst(str_replace('_', ' ', $this->ticket->status)))
-            ->action('Ver Ticket', url('/tickets/' . $this->ticket->id))
-            ->line('Gracias por usar nuestro sistema de tickets.');
+            ->subject('Ticket en progreso #' . $this->ticket->id)
+            ->view('emails.tickets.in-progress', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

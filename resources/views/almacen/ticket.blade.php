@@ -4,14 +4,36 @@
 
 @section('content')
 <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <!-- Alerta de Ticket Cancelado -->
+        @if($ticket->status === 'cancelado')
+            <div class="mb-6 bg-red-50 border-l-4 border-red-500 rounded-md p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">Ticket Cancelado</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Este ticket ha sido cancelado por el solicitante. No se puede trabajar en tickets cancelados.</p>
+                            @if($ticket->cancellation_reason)
+                                <p class="mt-1"><strong>Razón:</strong> {{ $ticket->cancellation_reason }}</p>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
         
         <!-- Header -->
         <div class="mb-8">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Ticket #{{ $ticket->id }}</h1>
+                        <h1 class="text-3xl font-bold text-gray-900">Ticket {{ $ticket->formatted_code }}</h1>
                         <p class="text-gray-600 mt-2">{{ $ticket->title }}</p>
                     </div>
                     <div class="flex space-x-3">
@@ -23,13 +45,74 @@
                                 Volver a Pendientes
                             </a>
                         @else
-                            <a href="{{ route('almacen.tickets.mine') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            <a href="{{ route('home') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                                 </svg>
                                 Volver a Mis Tickets
                             </a>
                         @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stepper de Estado -->
+        <div class="mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <div class="flex justify-between items-start">
+                    <!-- Paso 1: Solicitado -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full {{ $ticket->created_at ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }} mb-2">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 text-center">Solicitado</h3>
+                        <p class="text-xs text-gray-600 text-center mt-1">
+                            {{ $ticket->created_at->format('d/m/Y H:i') }}
+                        </p>
+                        <div class="text-xs text-gray-500 text-center mt-1 max-w-[80px]">
+                            hace {{ $ticket->created_at->diffForHumans() }}
+                        </div>
+                    </div>
+
+                    <!-- Línea conectora 1 -->
+                    <div class="flex-1 mx-2 mt-5 flex items-center">
+                        <div class="flex-1 h-1 {{ ($ticket->assigned_at || in_array($ticket->status, ['en_proceso', 'finalizado'])) ? 'bg-blue-600' : 'bg-gray-300' }}"></div>
+                    </div>
+
+                    <!-- Paso 2: En Proceso -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full {{ ($ticket->assigned_at || in_array($ticket->status, ['en_proceso', 'finalizado'])) ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400' }} mb-2">
+                            <i class="fas fa-spinner"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 text-center">En Proceso</h3>
+                        <p class="text-xs text-gray-600 text-center mt-1">
+                            {{ $ticket->assigned_at ? $ticket->assigned_at->format('d/m/Y H:i') : '-' }}
+                        </p>
+                        <div class="text-xs text-gray-500 text-center mt-1 max-w-[80px]">
+                            {{ $ticket->assigned_at ? 'hace ' . $ticket->assigned_at->diffForHumans() : 'Pendiente' }}
+                        </div>
+                    </div>
+
+                    <!-- Línea conectora 2 -->
+                    <div class="flex-1 mx-2 mt-5 flex items-center">
+                        <div class="flex-1 h-1 {{ ($ticket->completed_at || $ticket->cancelled_at) ? 'bg-blue-600' : 'bg-gray-300' }}"></div>
+                    </div>
+
+                    <!-- Paso 3: Finalizado/Cancelado -->
+                    <div class="flex flex-col items-center flex-1">
+                        <div class="flex items-center justify-center w-12 h-12 rounded-full {{ ($ticket->completed_at || $ticket->cancelled_at) ? ($ticket->cancelled_at ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600') : 'bg-gray-100 text-gray-400' }} mb-2">
+                            <i class="fas {{ $ticket->cancelled_at ? 'fa-times-circle' : 'fa-check-circle' }}"></i>
+                        </div>
+                        <h3 class="text-sm font-semibold text-gray-900 text-center">
+                            {{ $ticket->cancelled_at ? 'Cancelado' : 'Finalizado' }}
+                        </h3>
+                        <p class="text-xs text-gray-600 text-center mt-1">
+                            {{ $ticket->completed_at ? $ticket->completed_at->format('d/m/Y H:i') : ($ticket->cancelled_at ? $ticket->cancelled_at->format('d/m/Y H:i') : '-') }}
+                        </p>
+                        <div class="text-xs text-gray-500 text-center mt-1 max-w-[80px]">
+                            {{ $ticket->completed_at ? 'hace ' . $ticket->completed_at->diffForHumans() : ($ticket->cancelled_at ? 'hace ' . $ticket->cancelled_at->diffForHumans() : 'Pendiente') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -43,24 +126,12 @@
                     <div class="flex items-center space-x-2">
                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                             @if($ticket->status === 'completado') bg-green-100 text-green-800
-                            @elseif($ticket->status === 'en_progreso') bg-blue-100 text-blue-800
+                            @elseif($ticket->status === 'en_proceso') bg-blue-100 text-blue-800
                             @elseif($ticket->status === 'pendiente') bg-yellow-100 text-yellow-800
+                            @elseif($ticket->status === 'cancelado') bg-red-100 text-red-800
                             @else bg-gray-100 text-gray-800 @endif">
                             {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                         </span>
-                        @if($ticket->priority === 'alta')
-                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
-                                Prioridad Alta
-                            </span>
-                        @elseif($ticket->priority === 'media')
-                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
-                                Prioridad Media
-                            </span>
-                        @else
-                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                                Prioridad Baja
-                            </span>
-                        @endif
                     </div>
                 </div>
             </div>
@@ -111,12 +182,14 @@
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($ticket->images->where('type', 'solicitud') as $image)
-                            <div class="relative group">
+                            <div class="group relative cursor-pointer rounded-lg overflow-hidden aspect-square"
+                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
                                 <img src="{{ Storage::url($image->file_path) }}" 
-                                     alt="Imagen de solicitud" 
-                                     class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                     onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity rounded-lg"></div>
+                                     alt="{{ $image->original_name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl"></i>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -134,12 +207,14 @@
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($ticket->images->where('type', 'progreso') as $image)
-                            <div class="relative group">
+                            <div class="group relative cursor-pointer rounded-lg overflow-hidden aspect-square"
+                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
                                 <img src="{{ Storage::url($image->file_path) }}" 
-                                     alt="Imagen de progreso" 
-                                     class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                     onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity rounded-lg"></div>
+                                     alt="{{ $image->original_name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl"></i>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -157,12 +232,14 @@
                 <div class="p-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         @foreach($ticket->images->where('type', 'evidencia') as $image)
-                            <div class="relative group">
+                            <div class="group relative cursor-pointer rounded-lg overflow-hidden aspect-square"
+                                 onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
                                 <img src="{{ Storage::url($image->file_path) }}" 
-                                     alt="Evidencia de trabajo" 
-                                     class="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-75 transition-opacity"
-                                     onclick="openImageModal('{{ Storage::url($image->file_path) }}', '{{ $image->original_name }}')">
-                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-opacity rounded-lg"></div>
+                                     alt="{{ $image->original_name }}" 
+                                     class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
+                                    <i class="fas fa-search-plus text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl"></i>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -227,7 +304,7 @@
                             <p class="text-xs text-gray-500">Completada el {{ $ticket->survey->completed_at->format('d/m/Y H:i') }}</p>
                         </div>
                     @else
-                        <form method="POST" action="{{ route('surveys.complete', $ticket->survey) }}" class="space-y-3">
+                        <form method="POST" action="{{ route('solicitante.surveys.complete', $ticket->survey) }}" class="space-y-3">
                             @csrf
                             <div>
                                 <label class="text-sm font-medium text-gray-700">Califica tu experiencia (1-5 estrellas):</label>
@@ -258,30 +335,71 @@
             </div>
         @endif
 
-        <!-- Acciones del Ticket -->
-        @if($ticket->status === 'pendiente')
+        <!-- Acciones del Ticket (Solo si NO está cancelado) -->
+        @if($ticket->status === 'pendiente' && $ticket->status !== 'cancelado')
             <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 class="text-lg font-semibold text-gray-900">Acciones</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Acciones de Asignación</h3>
                 </div>
                 
                 <div class="p-6">
                     <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}">
                         @csrf
-                        <button type="submit" 
-                                class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Asignar a Mí
-                        </button>
+                        
+                        @if(auth()->user()->isAdmin())
+                            <!-- Formulario para Admin: Seleccionar usuario de almacén -->
+                            <div class="mb-4">
+                                <label for="assigned_to" class="block text-sm font-medium text-gray-700 mb-2">
+                                    <i class="fas fa-user-tie text-blue-600 mr-2"></i>
+                                    Asignar ticket a:
+                                </label>
+                                <select id="assigned_to" 
+                                        name="assigned_to" 
+                                        required
+                                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
+                                    <option value="">-- Seleccionar personal de almacén --</option>
+                                    @foreach($almacenUsers as $user)
+                                        <option value="{{ $user->id }}">
+                                            {{ $user->name }} ({{ $user->email }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                Asignar Ticket
+                            </button>
+                        @else
+                            <!-- Formulario para Personal de Almacén: Auto-asignación -->
+                            <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <p class="text-sm text-blue-800 mb-2">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    Este ticket se asignará a ti automáticamente.
+                                </p>
+                                <p class="text-xs text-blue-600">
+                                    <strong>Responsable:</strong> {{ auth()->user()->name }}
+                                </p>
+                            </div>
+                            
+                            <button type="submit" 
+                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                Asignar a Mí
+                            </button>
+                        @endif
                     </form>
                 </div>
             </div>
         @endif
 
-        <!-- Formulario para Completar (Solo si está asignado al usuario y no completado) -->
-        @if($ticket->assigned_to === auth()->id() && $ticket->status !== 'completado')
+        <!-- Formulario para Completar (Solo si está asignado al usuario, no completado y no cancelado) -->
+        @if($ticket->assigned_to === auth()->id() && $ticket->status !== 'completado' && $ticket->status !== 'cancelado')
 
         <!-- Mensajes de Error -->
         @if($errors->any())
@@ -307,6 +425,7 @@
         @endif
 
         <!-- Formulario para Completar -->
+        @if($ticket->status !== 'finalizado' && $ticket->status !== 'cancelado')
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-lg font-semibold text-gray-900">Evidencia del Trabajo Realizado</h3>
@@ -360,9 +479,7 @@
                                     <p class="pl-1">o arrastra y suelta</p>
                                 </div>
                                 <p class="text-xs text-gray-500">PNG, JPG, GIF hasta 2MB cada una (máximo 5 imágenes)</p>
-                                <p class="text-xs text-green-600 font-medium mt-1">
-                                    💡 Las imágenes se acumulan - puedes agregar más sin perder las anteriores
-                                </p>
+                                
                             </div>
                         </div>
                     </div>
@@ -439,7 +556,8 @@
 
             </form>
         </div>
-        @else
+        @endif
+        @elseif($ticket->status !== 'cancelado')
             <!-- Mensaje para tickets completados -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -476,44 +594,51 @@
 </div>
 
 <!-- Modal para ver imágenes -->
-<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50" onclick="closeImageModal()">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden relative">
-            <button onclick="closeImageModal()" class="absolute top-4 right-4 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 z-10">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-            </button>
-            <img id="modalImage" src="" alt="Imagen ampliada" class="w-full h-auto max-h-[90vh] object-contain">
-            <div class="p-4 bg-gray-50">
-                <p id="modalImageName" class="text-sm text-gray-600"></p>
-            </div>
-        </div>
+<div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 items-center justify-center p-4" style="display: none;">
+    <div class="relative max-w-6xl max-h-full" onclick="event.stopPropagation()">
+        <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-2xl">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="modalImage" src="" alt="" class="max-w-full max-h-[85vh] rounded-lg shadow-2xl">
+        <p id="modalImageTitle" class="text-white text-center mt-4 text-sm"></p>
     </div>
 </div>
 
+@endsection
+
+@push('scripts')
 <script>
 // Funciones para el modal de imágenes
-function openImageModal(imageSrc, imageName) {
+function openImageModal(src, title) {
     const modal = document.getElementById('imageModal');
-    const modalImage = document.getElementById('modalImage');
-    const modalImageName = document.getElementById('modalImageName');
-    
-    modalImage.src = imageSrc;
-    modalImageName.textContent = imageName || 'Imagen';
+    document.getElementById('modalImage').src = src;
+    document.getElementById('modalImageTitle').textContent = title;
     modal.classList.remove('hidden');
-    
-    // Prevenir scroll del body
-    document.body.style.overflow = 'hidden';
+    modal.style.display = 'flex';
 }
 
 function closeImageModal() {
     const modal = document.getElementById('imageModal');
     modal.classList.add('hidden');
-    
-    // Restaurar scroll del body
-    document.body.style.overflow = 'auto';
+    modal.style.display = 'none';
 }
+
+// Cerrar modal al hacer clic en el fondo
+document.getElementById('imageModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeImageModal();
+    }
+});
+
+// Cerrar modal con tecla ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const imageModal = document.getElementById('imageModal');
+        if (imageModal && !imageModal.classList.contains('hidden')) {
+            closeImageModal();
+        }
+    }
+});
 
 // Funciones para el widget de evidencia
 let evidenceSelectedFiles = []; // Array para mantener archivos acumulados
@@ -783,4 +908,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-@endsection
+@endpush
+
+@push('styles')
+<style>
+#imageModal img {
+    animation: fadeInScale 0.3s ease;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+</style>
+@endpush

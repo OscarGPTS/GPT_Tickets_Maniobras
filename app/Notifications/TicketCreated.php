@@ -26,7 +26,8 @@ class TicketCreated extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
+        // return ['mail', 'database']; // Descomentar para activar emails
+        return ['database']; // Solo base de datos por ahora
     }
 
     /**
@@ -35,14 +36,11 @@ class TicketCreated extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Nueva solicitud de movimiento de carga creada')
-            ->greeting('¡Hola!')
-            ->line('Se ha creado una nueva solicitud de movimiento de carga.')
-            ->line('**Título:** ' . $this->ticket->title)
-            ->line('**Solicitante:** ' . $this->ticket->user->name)
-            ->line('**Descripción:** ' . $this->ticket->description)
-            ->action('Ver Solicitud', url('/almacen/tickets/' . $this->ticket->id))
-            ->line('Por favor, revisa y asigna esta solicitud lo antes posible.');
+            ->subject('Nueva solicitud de movimiento de carga #' . $this->ticket->id)
+            ->view('emails.tickets.created', [
+                'ticket' => $this->ticket,
+                'recipient' => $notifiable,
+            ]);
     }
 
     /**

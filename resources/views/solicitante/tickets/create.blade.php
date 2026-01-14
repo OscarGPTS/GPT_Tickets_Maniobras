@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="mb-6">
             <div class="flex items-center space-x-3">
-                <a href="{{ route('tickets.index') }}" 
+                <a href="{{ route('home') }}" 
                    class="inline-flex items-center text-gray-500 hover:text-gray-700">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Volver a Mis Tickets
@@ -22,7 +22,7 @@
 
         <!-- Formulario -->
         <div class="bg-white shadow rounded-lg">
-            <form action="{{ route('tickets.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6 p-6">
+            <form action="{{ route('solicitante.tickets.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6 p-6">
                 @csrf
 
                 <!-- Título -->
@@ -145,7 +145,7 @@
 
                 <!-- Botones -->
                 <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-                    <a href="{{ route('tickets.index') }}" 
+                    <a href="{{ route('solicitante.tickets.index') }}" 
                        class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         Cancelar
                     </a>

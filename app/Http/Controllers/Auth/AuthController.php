@@ -59,7 +59,7 @@ class AuthController extends Controller
         return match($user->role) {
             'almacen' => redirect()->route('almacen.dashboard'),
             'admin' => redirect()->route('admin.dashboard'),
-            default => redirect()->route('dashboard'),
+            default => redirect()->route('home'),
         };
     }
 

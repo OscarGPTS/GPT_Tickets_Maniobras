@@ -14,11 +14,186 @@
                         <h1 class="text-3xl font-bold text-gray-900">Panel Administrativo</h1>
                         <p class="text-gray-600 mt-2">Gestiona usuarios, roles y supervisa el sistema</p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-sm text-gray-500">Última actualización</p>
-                        <p class="text-lg font-semibold text-gray-900">{{ now()->format('d/m/Y H:i') }}</p>
+                    <div class="flex items-center justify-between flex-col sm:flex-row gap-4">
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Última actualización</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ now()->format('d/m/Y H:i') }}</p>
+                        </div>
+                        
+                        <!-- Botón de Configuración con Dropdown -->
+                        <div class="relative group">
+                            <button class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-md shadow-sm text-sm font-medium hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                Configuración
+                                <svg class="w-4 h-4 ml-2 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                                </svg>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                <div class="py-2">
+                                    <a href="{{ route('admin.users.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                                        <svg class="w-5 h-5 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 12H9m4 0a3 3 0 01-3 3H9m0-6a3 3 0 013-3h1m-6 3v2a3 3 0 003 3h1"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Gestión de Usuarios</div>
+                                            <div class="text-xs text-gray-500">Crear, editar y asignar roles</div>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('admin.statistics') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-green-700 transition border-t border-gray-100">
+                                        <svg class="w-5 h-5 mr-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Estadísticas Avanzadas</div>
+                                            <div class="text-xs text-gray-500">Reportes detallados del sistema</div>
+                                        </div>
+                                    </a>
+                                    <a href="{{ route('admin.tickets.index') }}" class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition border-t border-gray-100">
+                                        <svg class="w-5 h-5 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <div class="font-medium">Todos los Tickets</div>
+                                            <div class="text-xs text-gray-500">Visualizar y filtrar tickets</div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN PRIORITARIA: Solicitudes Pendientes de Aprobar -->
+        <div class="mb-8 mt-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-900">Solicitudes Pendientes de Aprobar</h2>
+                            <p class="text-sm text-gray-600 mt-1">Estos son los tickets que requieren tu aprobación e asignación inmediata</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="text-4xl font-bold text-orange-600">{{ count($pendingTickets) }}</div>
+                        <p class="text-sm text-gray-600">Por aprobar</p>
+                    </div>
+                </div>
+
+                @if(count($pendingTickets) > 0)
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-orange-200">
+                            <thead class="bg-orange-100">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Título</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Solicitante</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Descripción</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Fecha Solicitud</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Imágenes</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-orange-900 uppercase tracking-wider">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-orange-100">
+                                @forelse($pendingTickets as $ticket)
+                                    <tr class="hover:bg-orange-50 transition-colors">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                                                {{ $ticket->formatted_code }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-semibold text-gray-900">{{ Str::limit($ticket->title, 40) }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
+                                                    <span class="text-white text-xs font-bold">{{ substr($ticket->user->name, 0, 1) }}</span>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <div class="text-sm font-medium text-gray-900">{{ $ticket->user->name }}</div>
+                                                    <div class="text-xs text-gray-500">{{ $ticket->user->email }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm text-gray-600">{{ Str::limit($ticket->description, 50) }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <div>{{ $ticket->created_at->format('d/m/Y') }}</div>
+                                            <div class="text-xs">{{ $ticket->created_at->format('H:i') }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                            @if($ticket->solicitudImages && count($ticket->solicitudImages) > 0)
+                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path d="M5.5 13a3 3 0 01-.369-5.98 4 4 0 117.753-1.3A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z"></path>
+                                                    </svg>
+                                                    {{ count($ticket->solicitudImages) }} imagen(es)
+                                                </span>
+                                            @else
+                                                <span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600">
+                                                    Sin imágenes
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center space-x-2">
+                                                <a href="{{ route('almacen.tickets.show', $ticket) }}" 
+                                                   class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                    </svg>
+                                                    Ver
+                                                </a>
+                                                <a href="{{ route('almacen.tickets.show', $ticket) }}#asignar" 
+                                                   class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors">
+                                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                    </svg>
+                                                    Asignar
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="px-6 py-12">
+                                            <div class="text-center">
+                                                <svg class="mx-auto h-12 w-12 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                <h3 class="mt-2 text-sm font-medium text-gray-900">¡Excelente!</h3>
+                                                <p class="mt-1 text-sm text-gray-500">No hay solicitudes pendientes de aprobar. Todas han sido procesadas.</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-center items-center py-8">
+                        <div class="flex justify-center items-center py-8">
+                            <svg width="80px" height="80px" viewBox="0 0 1024 1024" class="icon"  version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M512 512m-448 0a448 448 0 1 0 896 0 448 448 0 1 0-896 0Z" fill="#4CAF50" /><path d="M738.133333 311.466667L448 601.6l-119.466667-119.466667-59.733333 59.733334 179.2 179.2 349.866667-349.866667z" fill="#CCFF90" /></svg>
+                        </div>
+                        <h3 class="mt-4 text-lg font-semibold text-gray-900">¡Perfecto!</h3>
+                        <p class="mt-2 text-gray-600">No hay solicitudes pendientes de aprobar. Todas han sido procesadas.</p>
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -32,8 +207,8 @@
                     <!-- Gestionar Usuarios -->
                     <a href="{{ route('admin.users.index') }}" class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
                         <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-1.5H5a2 2 0 00-2 2v10a2 2 0 002 2h6.5"></path>
+                            <svg width="20px" height="20px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13 20V18C13 15.2386 10.7614 13 8 13C5.23858 13 3 15.2386 3 18V20H13ZM13 20H21V19C21 16.0545 18.7614 14 16 14C14.5867 14 13.3103 14.6255 12.4009 15.6311M11 7C11 8.65685 9.65685 10 8 10C6.34315 10 5 8.65685 5 7C5 5.34315 6.34315 4 8 4C9.65685 4 11 5.34315 11 7ZM18 9C18 10.1046 17.1046 11 16 11C14.8954 11 14 10.1046 14 9C14 7.89543 14.8954 7 16 7C17.1046 7 18 7.89543 18 9Z" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
                         </div>
                         <div>
@@ -56,7 +231,7 @@
                     </a>
 
                     <!-- Ver Tickets -->
-                    <a href="{{ route('tickets.index') }}" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
+                    <a href="{{ route('admin.tickets.index') }}" class="flex items-center p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors">
                         <div class="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -69,15 +244,13 @@
                     </a>
 
                     <!-- Ver Encuestas -->
-                    <a href="{{ route('surveys.index') }}" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
+                    <a href="{{ route('admin.tickets.index', ['status' => 'completado']) }}" class="flex items-center p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition-colors">
                         <div class="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
-                            </svg>
+                            <svg width="18px" height="16px" viewBox="0 0 1024 1024" fill="#FFFFFF" class="icon"  version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M824.8 1003.2H203.2c-12.8 0-25.6-2.4-37.6-7.2-11.2-4.8-21.6-12-30.4-20.8-8.8-8.8-16-19.2-20.8-30.4-4.8-12-7.2-24-7.2-37.6V260c0-12.8 2.4-25.6 7.2-37.6 4.8-11.2 12-21.6 20.8-30.4 8.8-8.8 19.2-16 30.4-20.8 12-4.8 24-7.2 37.6-7.2h94.4v48H203.2c-26.4 0-48 21.6-48 48v647.2c0 26.4 21.6 48 48 48h621.6c26.4 0 48-21.6 48-48V260c0-26.4-21.6-48-48-48H730.4v-48H824c12.8 0 25.6 2.4 37.6 7.2 11.2 4.8 21.6 12 30.4 20.8 8.8 8.8 16 19.2 20.8 30.4 4.8 12 7.2 24 7.2 37.6v647.2c0 12.8-2.4 25.6-7.2 37.6-4.8 11.2-12 21.6-20.8 30.4-8.8 8.8-19.2 16-30.4 20.8-11.2 4.8-24 7.2-36.8 7.2z" fill="" /><path d="M752.8 308H274.4V152.8c0-32.8 26.4-60 60-60h61.6c22.4-44 67.2-72.8 117.6-72.8 50.4 0 95.2 28.8 117.6 72.8h61.6c32.8 0 60 26.4 60 60v155.2m-430.4-48h382.4V152.8c0-6.4-5.6-12-12-12H598.4l-5.6-16c-12-33.6-43.2-56-79.2-56s-67.2 22.4-79.2 56l-5.6 16H334.4c-6.4 0-12 5.6-12 12v107.2zM432.8 792c-6.4 0-12-2.4-16.8-7.2L252.8 621.6c-4.8-4.8-7.2-10.4-7.2-16.8s2.4-12 7.2-16.8c4.8-4.8 10.4-7.2 16.8-7.2s12 2.4 16.8 7.2L418.4 720c4 4 8.8 5.6 13.6 5.6s10.4-1.6 13.6-5.6l295.2-295.2c4.8-4.8 10.4-7.2 16.8-7.2s12 2.4 16.8 7.2c9.6 9.6 9.6 24 0 33.6L449.6 784.8c-4.8 4-11.2 7.2-16.8 7.2z" fill="" /></svg>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-900">Ver Encuestas</p>
-                            <p class="text-xs text-gray-600">Estado de encuestas</p>
+                            <p class="text-sm font-medium text-gray-900">Tickets Completados</p>
+                            <p class="text-xs text-gray-600">Ver encuestas y calificaciones</p>
                         </div>
                     </a>
 
@@ -85,8 +258,13 @@
             </div>
         </div>
 
-        <!-- Estadísticas Principales con Chart.js -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- ESTADÍSTICAS DEL SISTEMA (Desglosadas) -->
+        <div class="mt-12 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Estadísticas del Sistema</h2>
+
+                <!-- Estadísticas Principales con Chart.js -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             
             <!-- Gráfico Total Usuarios -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -122,8 +300,8 @@
                     <p class="text-2xl font-bold text-gray-900">{{ $stats['total_surveys'] }}</p>
                     <p class="text-sm text-gray-500">Total de Encuestas</p>
                 </div>
+                </div>
             </div>
-
         </div>
 
         <!-- Grid de Contenido Principal -->
@@ -237,7 +415,7 @@
                     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-lg font-semibold text-gray-900">Tickets Recientes</h3>
-                            <a href="{{ route('tickets.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                            <a href="{{ route('almacen.dashboard') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
                                 Ver todos →
                             </a>
                         </div>
@@ -246,10 +424,10 @@
                             @forelse($recentTickets as $ticket)
                                 <div class="p-3 bg-gray-50 rounded-lg">
                                     <div class="flex items-center justify-between mb-2">
-                                        <p class="text-sm font-medium text-gray-900">#{{ $ticket->id }} - {{ Str::limit($ticket->title, 25) }}</p>
+                                        <p class="text-sm font-medium text-gray-900">{{ $ticket->formatted_code }} - {{ Str::limit($ticket->title, 25) }}</p>
                                         <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full
                                             @if($ticket->status === 'completado') bg-green-100 text-green-800
-                                            @elseif($ticket->status === 'en_progreso') bg-blue-100 text-blue-800
+                                            @elseif($ticket->status === 'en_proceso') bg-blue-100 text-blue-800
                                             @else bg-yellow-100 text-yellow-800 @endif">
                                             {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                                         </span>
@@ -414,45 +592,40 @@
                             @forelse($allTickets as $ticket)
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        #{{ $ticket->id }}
+                                        {{ $ticket->formatted_code }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm font-medium text-gray-900">{{ Str::limit($ticket->title, 30) }}</div>
                                         <div class="text-sm text-gray-500">{{ Str::limit($ticket->description, 50) }}</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-2 py-4 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="w-8 h-8 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center">
-                                                <span class="text-white text-xs font-bold">{{ substr($ticket->user->name, 0, 1) }}</span>
-                                            </div>
+                                            
                                             <div class="ml-3">
                                                 <div class="text-sm font-medium text-gray-900">{{ $ticket->user->name }}</div>
                                                 <div class="text-sm text-gray-500">{{ $ticket->user->email }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
                                         @if($ticket->assignedTo)
                                             <div class="flex items-center">
-                                                <div class="w-6 h-6 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center">
-                                                    <span class="text-white text-xs font-bold">{{ substr($ticket->assignedTo->name, 0, 1) }}</span>
-                                                </div>
                                                 <span class="ml-2 text-sm text-gray-900">{{ $ticket->assignedTo->name }}</span>
                                             </div>
                                         @else
-                                            <span class="text-gray-400 italic">Sin asignar</span>
+                                            <span class="ml-2 text-gray-400 italic">Sin asignar</span>
                                         @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @php
                                             $statusColors = [
                                                 'pendiente' => 'bg-yellow-100 text-yellow-800',
-                                                'en_progreso' => 'bg-blue-100 text-blue-800',
+                                                'en_proceso' => 'bg-blue-100 text-blue-800',
                                                 'finalizado' => 'bg-green-100 text-green-800'
                                             ];
                                             $statusLabels = [
                                                 'pendiente' => 'Pendiente',
-                                                'en_progreso' => 'En Progreso',
+                                                'en_proceso' => 'En Proceso',
                                                 'finalizado' => 'Finalizado'
                                             ];
                                         @endphp
@@ -481,7 +654,7 @@
                                         <div class="text-xs">{{ $ticket->created_at->format('H:i') }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <a href="{{ route('tickets.show', $ticket) }}" 
+                                        <a href="{{ route('almacen.tickets.show', $ticket) }}" 
                                            class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full hover:bg-blue-200 transition-colors">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>

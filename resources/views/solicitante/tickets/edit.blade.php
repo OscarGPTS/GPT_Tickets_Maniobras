@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="mb-6">
             <div class="flex items-center space-x-3">
-                <a href="{{ route('tickets.show', $ticket) }}" 
+                <a href="{{ route('solicitante.tickets.show', $ticket) }}" 
                    class="inline-flex items-center text-gray-500 hover:text-gray-700">
                     <i class="fas fa-arrow-left mr-2"></i>
                     Volver al Ticket
@@ -22,7 +22,7 @@
 
         <!-- Formulario -->
         <div class="bg-white shadow rounded-lg">
-            <form action="{{ route('tickets.update', $ticket) }}" method="POST" enctype="multipart/form-data" class="space-y-6 p-6">
+            <form action="{{ route('solicitante.tickets.update', $ticket) }}" method="POST" enctype="multipart/form-data" class="space-y-6 p-6">
                 @csrf
                 @method('PUT')
 
@@ -168,29 +168,16 @@
                 </div>
 
                 <!-- Botones -->
-                <div class="flex items-center justify-between pt-6 border-t border-gray-200">
-                    <div class="flex items-center space-x-3">
-                        <a href="{{ route('tickets.show', $ticket) }}" 
-                           class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            Cancelar
-                        </a>
-                        <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <i class="fas fa-save mr-2"></i>
-                            Guardar Cambios
-                        </button>
-                    </div>
-                    
-                    <!-- Botón eliminar ticket -->
-                    <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este ticket? Esta acción no se puede deshacer.')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            <i class="fas fa-trash mr-2"></i>
-                            Eliminar Ticket
-                        </button>
-                    </form>
+                <div class="flex items-center space-x-3 pt-6 border-t border-gray-200">
+                    <a href="{{ route('solicitante.tickets.show', $ticket) }}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancelar
+                    </a>
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent shadow-sm text-sm font-medium rounded-md text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar Cambios
+                    </button>
                 </div>
             </form>
         </div>
