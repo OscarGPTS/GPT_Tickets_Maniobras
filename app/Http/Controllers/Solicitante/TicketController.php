@@ -83,13 +83,13 @@ class TicketController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'images' => 'nullable|array|max:5',
-            'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         // Verificar si el usuario puede crear un ticket
-        if (!Auth::user()->canCreateTicket()) {
-            return back()->withErrors(['error' => 'Debes completar las encuestas pendientes antes de crear un nuevo ticket.']);
-        }
+        /* if (!Auth::user()->canCreateTicket()) {
+            return back()->withErrors(['error' => 'Debes completar las encuestas pendientes ants de crear un nuevo ticket.']);
+        } */
 
         DB::beginTransaction();
         try {
@@ -122,8 +122,12 @@ class TicketController extends Controller
             try {
                 $admins = User::role('admin')->get();
                 if ($admins->count() > 0) {
-                    Notification::send($admins, new TicketCreatedNotification($ticket));
-                    Log::info('Notificación enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
+                    try {
+                        Notification::send($admins, new TicketPendingApprovalNotification($ticket));
+                        Log::info('Notificación de ticket pendiente enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
+                    } catch (\Exception $e) {
+                        Log::error('Error al enviar notificación de ticket pendiente: ' . $e->getMessage());
+                    }
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificaciones de ticket creado: ' . $e->getMessage());
