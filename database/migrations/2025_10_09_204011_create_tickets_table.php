@@ -17,10 +17,12 @@ return new class extends Migration
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->string('title');
             $table->text('description');
-            $table->enum('status', ['pendiente', 'en_proceso', 'finalizado'])->default('pendiente');
+            $table->enum('status', ['pendiente', 'en_proceso', 'finalizado', 'cancelado'])->default('pendiente');
             $table->text('work_evidence')->nullable(); // Evidencia del trabajo realizado
+            $table->text('cancellation_reason')->nullable(); // Razón de cancelación
             $table->timestamp('assigned_at')->nullable();
             $table->timestamp('completed_at')->nullable();
+            $table->timestamp('cancelled_at')->nullable();
             $table->timestamps();
         });
     }
