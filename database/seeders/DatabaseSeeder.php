@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         // Ejecutar el seeder de roles y permisos
         $this->call([
             RoleSeeder::class,
-            TestUsersSeeder::class,  // Usuarios de prueba para desarrollo
+            // TestUsersSeeder::class,  // Usuarios de prueba deshabilitados
         ]);
     }
 }
