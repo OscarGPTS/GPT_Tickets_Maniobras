@@ -301,6 +301,50 @@ class TicketController extends Controller
     }
 
     /**
+     * Rechazar ticket
+     */
+    public function reject(Request $request, Ticket $ticket)
+    {
+        // Verificar que el ticket esté pendiente
+        if ($ticket->status !== 'pendiente') {
+            return back()->withErrors(['error' => 'Solo se pueden rechazar tickets pendientes.']);
+        }
+
+        $request->validate([
+            'rejection_reason' => 'required|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Actualizar ticket a cancelado con el motivo
+            $ticket->update([
+                'status' => 'cancelado',
+                'cancellation_reason' => $request->rejection_reason,
+                'cancelled_at' => now(),
+            ]);
+
+            // Enviar notificación al usuario solicitante
+            try {
+                Mail::to($ticket->user->email)
+                    ->send(new \App\Mail\TicketRejectedMail($ticket));
+                
+                Log::info('Notificación de rechazo enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación de ticket rechazado: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return redirect()->route('almacen.tickets.pending')
+                ->with('success', 'Ticket rechazado exitosamente. Se ha notificado al solicitante.');
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->withErrors(['error' => 'Error al rechazar el ticket: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Exportar tickets a Excel
      */
     public function export(Request $request)

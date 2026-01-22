@@ -25,17 +25,23 @@ class GoogleAuthController extends Controller
     {
         try {
             $googleUser = Socialite::driver('google')->user();
+            $email = $googleUser->getEmail();
+
+            if (!str_ends_with(strtolower($email), '@gptservices.com')) {
+                return redirect()->route('login')
+                    ->withErrors(['error' => 'Solo se permiten cuentas del dominio @gptservices.com']);
+            }
             
             // Buscar usuario existente
-            $existingUser = User::where('email', $googleUser->getEmail())->first();
+            $existingUser = User::where('email', $email)->first();
             $isNewUser = !$existingUser;
             
             // Buscar o crear usuario
             $user = User::updateOrCreate(
-                ['email' => $googleUser->getEmail()],
+                ['email' => $email],
                 [
                     'name' => $googleUser->getName(),
-                    'email' => $googleUser->getEmail(),
+                    'email' => $email,
                     'provider_id' => $googleUser->getId(),
                     'avatar' => $googleUser->getAvatar(),
                     'provider' => 'google',
