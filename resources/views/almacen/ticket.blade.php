@@ -336,7 +336,7 @@
         @endif
 
         <!-- Acciones del Ticket (Solo si NO está cancelado) -->
-        @if($ticket->status === 'pendiente' && $ticket->status !== 'cancelado')
+        @if($ticket->status === 'pendiente')
             <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                     <h3 class="text-lg font-semibold text-gray-900">Acciones de Asignación</h3>
@@ -366,13 +366,24 @@
                                 </select>
                             </div>
                             
-                            <button type="submit" 
-                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Asignar Ticket
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <button type="button" 
+                                        onclick="openRejectModal()"
+                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Rechazar Ticket
+                                </button>
+                                
+                                <button type="submit" 
+                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Aprobar y Asignar
+                                </button>
+                            </div>
                         @else
                             <!-- Formulario para Personal de Almacén: Auto-asignación -->
                             <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -392,7 +403,7 @@
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
-                                    Rechazar
+                                    Rechazar Ticket
                                 </button>
                                 
                                 <button type="submit" 
@@ -400,7 +411,7 @@
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                                     </svg>
-                                    Asignarme
+                                    Aprobar y Asignarme
                                 </button>
                             </div>
                         @endif
@@ -626,10 +637,10 @@
                               id="rejection_reason" 
                               rows="4" 
                               required
-                              maxlength="500"
+                              maxlength="200"
                               class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
                               placeholder="Explica el motivo por el cual se rechaza este ticket..."></textarea>
-                    <p class="mt-1 text-xs text-gray-500">Máximo 500 caracteres</p>
+                    <p class="mt-1 text-xs text-gray-500">Máximo 200 caracteres</p>
                 </div>
             </div>
             
@@ -962,22 +973,39 @@ document.addEventListener('DOMContentLoaded', function() {
         ratingText.textContent = ratingLabels[rating];
     }
 
-    // Modal de Rechazo
-    function openRejectModal() {
-        const modal = document.getElementById('rejectModal');
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeRejectModal();
+            closeImageModal();
+        }
+    });
+});
+
+// Modal de Rechazo - Funciones globales
+function openRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    if (modal) {
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
     }
+}
 
-    function closeRejectModal() {
-        const modal = document.getElementById('rejectModal');
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    if (modal) {
         modal.classList.add('hidden');
         modal.style.display = 'none';
         // Limpiar el textarea
-        document.getElementById('rejection_reason').value = '';
+        const textarea = document.getElementById('rejection_reason');
+        if (textarea) {
+            textarea.value = '';
+        }
     }
+}
 
-    // Cerrar modal al hacer clic fuera
+// Event listener para cerrar modal al hacer clic fuera
+document.addEventListener('DOMContentLoaded', function() {
     const rejectModalElement = document.getElementById('rejectModal');
     if (rejectModalElement) {
         rejectModalElement.addEventListener('click', function(e) {
@@ -986,14 +1014,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    // Cerrar modales con tecla Escape
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeRejectModal();
-            closeImageModal();
-        }
-    });
 });
 </script>
 @endpush
