@@ -14,5 +14,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 // API de Prueba (sin autenticación)
-Route::get('/api/test-notification/{userId}', [FirebaseController::class, 'testNotification'])
+Route::get('/test-notification/{userId}', [FirebaseController::class, 'testNotification'])
     ->name('fcm.test');

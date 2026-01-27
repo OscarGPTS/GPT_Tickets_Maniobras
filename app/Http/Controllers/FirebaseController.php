@@ -17,9 +17,9 @@ class FirebaseController extends Controller
 {
     protected $messaging;
 
-    public function __construct(Messaging $messaging)
+    public function __construct()
     {
-        $this->messaging = $messaging;
+        // Inicializar Firebase solo cuando se use
     }
 
     /**
@@ -32,6 +32,9 @@ class FirebaseController extends Controller
     public function testNotification(int $userId): JsonResponse
     {
         try {
+            // Obtener instancia de Messaging
+            $this->messaging = app(Messaging::class);
+            
             $topic = "user_{$userId}";
             $title = "Notificación de Prueba";
             $body = "Esta es una notificación de prueba enviada al usuario #{$userId}";
