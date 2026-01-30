@@ -194,8 +194,9 @@ class TicketController extends Controller
         try {
             // Subir imágenes de progreso
             if ($request->hasFile('progress_images')) {
+                $yearMonth = $ticket->created_at->format('Y/m');
                 foreach ($request->file('progress_images') as $image) {
-                    $path = $image->store('tickets/progress', 'public');
+                    $path = $image->store('tickets/' . $yearMonth . '/' . $ticket->id . '/progress', 'public');
                     
                     $ticket->images()->create([
                         'file_path' => $path,
@@ -253,8 +254,9 @@ class TicketController extends Controller
 
             // Procesar imágenes de evidencia
             if ($request->hasFile('evidence_images')) {
+                $yearMonth = $ticket->created_at->format('Y/m');
                 foreach ($request->file('evidence_images') as $image) {
-                    $path = $image->store('tickets/' . $ticket->id . '/evidence', 'public');
+                    $path = $image->store('tickets/' . $yearMonth . '/' . $ticket->id . '/evidence', 'public');
                     
                     TicketImage::create([
                         'ticket_id' => $ticket->id,
