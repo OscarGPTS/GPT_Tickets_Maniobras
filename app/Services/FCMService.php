@@ -105,6 +105,30 @@ class FCMService
     }
 
     /**
+     * Notificación de nueva solicitud a admins
+     */
+    public function notifyNewTicketToAdmins(int $ticketId, string $ticketTitle, string $solicitante): array
+    {
+        // Obtener todos los usuarios admin
+        $admins = \App\Models\User::role('admin')->pluck('id')->toArray();
+        
+        if (empty($admins)) {
+            return ['success' => false, 'message' => 'No hay administradores para notificar'];
+        }
+
+        return $this->sendToMultipleUsers(
+            $admins,
+            '📦 Nueva Solicitud',
+            "Tienes una nueva solicitud de movimiento de carga de {$solicitante}",
+            [
+                'type' => 'new_ticket_request',
+                'ticket_id' => (string) $ticketId,
+                'action' => 'review_ticket'
+            ]
+        );
+    }
+
+    /**
      * Notificación de ticket asignado
      */
     public function notifyTicketAssigned(int $userId, int $ticketId, string $ticketTitle): array

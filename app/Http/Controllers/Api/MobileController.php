@@ -51,8 +51,7 @@ class MobileController extends Controller
 
 
         // Obtener tickets asignados al usuario (en_proceso y pendientes)
-        $tickets = Ticket::where('assigned_to', $user->id)
-            ->whereIn('status', [Ticket::STATUS_EN_PROCESO, Ticket::STATUS_PENDIENTE])
+        $tickets = Ticket::whereIn('status', [Ticket::STATUS_EN_PROCESO, Ticket::STATUS_PENDIENTE])
             ->with(['user:id,name,email', 'solicitudImages:id,ticket_id,file_path', 'evidenciaImages:id,ticket_id,file_path'])
             ->orderByRaw("CASE WHEN status = 'en_proceso' THEN 0 ELSE 1 END")
             ->orderBy('assigned_at', 'desc')
@@ -80,13 +79,13 @@ class MobileController extends Controller
                 'imagenes_solicitud' => $ticket->solicitudImages->map(function ($image) {
                     return [
                         'id' => $image->id,
-                        'url' => asset('storage/' . $image->file_path)
+                        'path' => $image->file_path
                     ];
                 }),
                 'imagenes_evidencia' => $ticket->evidenciaImages->map(function ($image) {
                     return [
                         'id' => $image->id,
-                        'url' => asset('storage/' . $image->file_path)
+                        'path' => $image->file_path
                     ];
                 })
             ];

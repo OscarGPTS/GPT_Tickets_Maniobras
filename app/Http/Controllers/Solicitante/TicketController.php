@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\TicketCreatedNotification;
 use App\Notifications\TicketCancelledNotification;
 use App\Notifications\TicketPendingApprovalNotification;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -18,12 +19,15 @@ use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
+    protected $fcmService;
+
     /**
      * Constructor
      */
-    public function __construct()
+    public function __construct(FCMService $fcmService)
     {
         $this->middleware('auth');
+        $this->fcmService = $fcmService;
     }
 
     /**
@@ -123,8 +127,20 @@ class TicketController extends Controller
                 $admins = User::role('admin')->get();
                 if ($admins->count() > 0) {
                     try {
+                        // Notificación en base de datos
                         Notification::send($admins, new TicketPendingApprovalNotification($ticket));
                         Log::info('Notificación de ticket pendiente enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
+                        
+                        // Notificación push FCM
+                        $fcmResult = $this->fcmService->notifyNewTicketToAdmins(
+                            $ticket->id,
+                            $ticket->title,
+                            Auth::user()->name
+                        );
+                        
+                        if ($fcmResult['success']) {
+                            Log::info('Notificación FCM enviada a ' . ($fcmResult['success_count'] ?? 0) . ' admins');
+                        }
                     } catch (\Exception $e) {
                         Log::error('Error al enviar notificación de ticket pendiente: ' . $e->getMessage());
                     }
