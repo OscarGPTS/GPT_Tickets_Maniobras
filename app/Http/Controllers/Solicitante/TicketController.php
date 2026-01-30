@@ -107,8 +107,9 @@ class TicketController extends Controller
 
             // Procesar imágenes si las hay
             if ($request->hasFile('images')) {
+                $yearMonth = now()->format('Y/m');
                 foreach ($request->file('images') as $image) {
-                    $path = $image->store('tickets/' . $ticket->id, 'public');
+                    $path = $image->store('tickets/' . $yearMonth . '/' . $ticket->id, 'public');
                     
                     TicketImage::create([
                         'ticket_id' => $ticket->id,
@@ -213,8 +214,9 @@ class TicketController extends Controller
 
             // Procesar nuevas imágenes si las hay
             if ($request->hasFile('images')) {
+                $yearMonth = $ticket->created_at->format('Y/m');
                 foreach ($request->file('images') as $image) {
-                    $path = $image->store('tickets/' . $ticket->id, 'public');
+                    $path = $image->store('tickets/' . $yearMonth . '/' . $ticket->id, 'public');
                     
                     TicketImage::create([
                         'ticket_id' => $ticket->id,

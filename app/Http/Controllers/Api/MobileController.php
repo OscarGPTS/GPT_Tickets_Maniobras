@@ -176,7 +176,8 @@ class MobileController extends Controller
             // Procesar imagen de evidencia
             if ($request->hasFile('imagen')) {
                 $image = $request->file('imagen');
-                $path = $image->store('tickets/' . $ticket->id . '/evidence', 'public');
+                $yearMonth = $ticket->created_at->format('Y/m');
+                $path = $image->store('tickets/' . $yearMonth . '/' . $ticket->id . '/evidence', 'public');
                 
                 TicketImage::create([
                     'ticket_id' => $ticket->id,
