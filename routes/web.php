@@ -42,6 +42,9 @@ require __DIR__.'/solicitante.php';
 // Incluir rutas de almacén
 require __DIR__.'/almacen.php';
 
+// Incluir rutas de Firebase (FCM)
+require __DIR__.'/firebase.php';
+
 /*
 |--------------------------------------------------------------------------
 | Rutas de Testing y Desarrollo

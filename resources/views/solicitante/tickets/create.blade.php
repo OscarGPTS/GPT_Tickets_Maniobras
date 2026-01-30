@@ -121,28 +121,6 @@
                     @enderror
                 </div>
 
-                <!-- Información adicional -->
-                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i class="fas fa-info-circle h-5 w-5 text-blue-400"></i>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-blue-800">
-                                Información importante
-                            </h3>
-                            <div class="mt-2 text-sm text-blue-700">
-                                <ul class="list-disc list-inside space-y-1">
-                                    <li>Tu solicitud será revisada por el equipo de almacén</li>
-                                    <li>Recibirás notificaciones sobre el progreso</li>
-                                    <li>Una vez completada, deberás calificar el servicio</li>
-                                    <li>Las imágenes ayudan a entender mejor tu solicitud</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Botones -->
                 <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
                     <a href="{{ route('solicitante.tickets.index') }}" 

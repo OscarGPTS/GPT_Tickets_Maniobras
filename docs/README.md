@@ -280,28 +280,6 @@ php artisan queue:work
 php artisan migrate:fresh --seed
 ```
 
-## 📖 Documentación Adicional
-
-- [Configuración de Notificaciones por Email](./NOTIFICACIONES.md)
-- [Arquitectura y Mejoras del Sistema](./ARQUITECTURA.md)
-
-## 🆘 Soporte y Solución de Problemas
-
-### Problemas Comunes
-
-**Error: "RouteNotFoundException"**
-- Verificar que las rutas estén registradas en `routes/web.php` y archivos de rol
-- Limpiar caché: `php artisan route:clear`
-
-**Imágenes no se muestran**
-- Ejecutar: `php artisan storage:link`
-- Verificar permisos de `storage/app/public`
-
-**Notificaciones no llegan por email**
-- Verificar configuración SMTP en `.env`
-- Activar emails en archivos de notificación (ver docs/NOTIFICACIONES.md)
-- Verificar logs: `storage/logs/laravel.log`
-
 ---
 
 **Sistema de Tickets v1.0** - GPT Services

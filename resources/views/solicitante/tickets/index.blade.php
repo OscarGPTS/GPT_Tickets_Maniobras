@@ -48,6 +48,46 @@
         </div>
     @endif
 
+
+    <!-- Encuestas pendientes -->
+    @if($pendingSurveys->count() > 0)
+        <div id="pending-surveys" class="mt-8">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <div class="flex items-center mb-4">
+                    <span class="bg-yellow-100 text-yellow-800 rounded-full p-2 mr-3">
+                        <i class="fas fa-star"></i>
+                    </span>
+                    <h2 class="text-xl font-bold text-gray-900">
+                        Encuestas Pendientes
+                        <span class="ml-2 text-sm font-normal text-gray-600">({{ $pendingSurveys->count() }})</span>
+                    </h2>
+                </div>
+                <p class="text-sm text-gray-700 mb-4">
+                    Tienes encuestas pendientes. Por favor completa las encuestas de tus tickets finalizados antes de crear nuevas solicitudes:
+                </p>
+                <div class="space-y-3">
+                    @foreach($pendingSurveys as $survey)
+                        <div class="bg-white rounded-lg border border-yellow-200 p-4 flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">
+                                    Ticket #{{ $survey->ticket->id }} - {{ Str::limit($survey->ticket->title, 60) }}
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    Completado por {{ $survey->ticket->assignedTo->name }}
+                                </p>
+                            </div>
+                            <a href="{{ route('solicitante.tickets.show', $survey->ticket) }}#survey-form" 
+                            class="inline-flex items-center px-4 py-2 bg-yellow-600 text-gray-900 font-medium rounded-lg hover:bg-yellow-700 transition-colors">
+                                <i class="fas fa-star mr-2"></i>
+                                Calificar Ahora
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+    <br>
     <!-- Estadísticas rápidas -->
     <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <a href="{{ route('solicitante.tickets.index') }}" 
@@ -117,44 +157,7 @@
     </div>
 
 
-    <!-- Encuestas pendientes -->
-    @if($pendingSurveys->count() > 0)
-        <div id="pending-surveys" class="mt-8">
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-                <div class="flex items-center mb-4">
-                    <span class="bg-yellow-100 text-yellow-800 rounded-full p-2 mr-3">
-                        <i class="fas fa-star"></i>
-                    </span>
-                    <h2 class="text-xl font-bold text-gray-900">
-                        Encuestas Pendientes
-                        <span class="ml-2 text-sm font-normal text-gray-600">({{ $pendingSurveys->count() }})</span>
-                    </h2>
-                </div>
-                <p class="text-sm text-gray-700 mb-4">
-                    Por favor califica los siguientes servicios para poder crear nuevas solicitudes:
-                </p>
-                <div class="space-y-3">
-                    @foreach($pendingSurveys as $survey)
-                        <div class="bg-white rounded-lg border border-yellow-200 p-4 flex items-center justify-between">
-                            <div class="flex-1">
-                                <p class="font-medium text-gray-900">
-                                    Ticket #{{ $survey->ticket->id }} - {{ Str::limit($survey->ticket->title, 60) }}
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    Completado por {{ $survey->ticket->assignedTo->name }}
-                                </p>
-                            </div>
-                            <a href="{{ route('solicitante.tickets.show', $survey->ticket) }}#survey-form" 
-                            class="inline-flex items-center px-4 py-2 bg-yellow-600 text-gray-900 font-medium rounded-lg hover:bg-yellow-700 transition-colors">
-                                <i class="fas fa-star mr-2"></i>
-                                Calificar Ahora
-                            </a>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
+    
 
     <br>
     <!-- Tabla de tickets -->

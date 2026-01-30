@@ -183,7 +183,7 @@
                                             </div>
                                             <div class="mb-1">
                                                 <span class="text-xs text-gray-500">Asignado:</span>
-                                                <span class="font-medium">{{ $ticket->assigned_at->format('d/m/Y H:i') }}</span>
+                                                <span class="font-medium">{{ $ticket->assigned_at ? $ticket->assigned_at->format('d/m/Y H:i') : '-' }}</span>
                                             </div>
                                             @if($ticket->completed_at)
                                                 <div>

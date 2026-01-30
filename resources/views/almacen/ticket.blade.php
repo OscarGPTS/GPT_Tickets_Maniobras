@@ -336,7 +336,7 @@
         @endif
 
         <!-- Acciones del Ticket (Solo si NO está cancelado) -->
-        @if($ticket->status === 'pendiente' && $ticket->status !== 'cancelado')
+        @if($ticket->status === 'pendiente')
             <div class="mb-6 bg-white rounded-lg shadow-sm border border-gray-200">
                 <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                     <h3 class="text-lg font-semibold text-gray-900">Acciones de Asignación</h3>
@@ -366,13 +366,24 @@
                                 </select>
                             </div>
                             
-                            <button type="submit" 
-                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                                Asignar Ticket
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <button type="button" 
+                                        onclick="openRejectModal()"
+                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Rechazar Ticket
+                                </button>
+                                
+                                <button type="submit" 
+                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Aprobar y Asignar
+                                </button>
+                            </div>
                         @else
                             <!-- Formulario para Personal de Almacén: Auto-asignación -->
                             <div class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -385,13 +396,24 @@
                                 </p>
                             </div>
                             
-                            <button type="submit" 
-                                    class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                </svg>
-                                Asignar a Mí
-                            </button>
+                            <div class="flex items-center gap-3">
+                                <button type="button" 
+                                        onclick="openRejectModal()"
+                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-red-300 rounded-md text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                    Rechazar Ticket
+                                </button>
+                                
+                                <button type="submit" 
+                                        class="flex-1 inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                    Aprobar y Asignarme
+                                </button>
+                            </div>
                         @endif
                     </form>
                 </div>
@@ -590,6 +612,50 @@
             </div>
         @endif
 
+    </div>
+</div>
+
+<!-- Modal para Rechazar Ticket -->
+<div id="rejectModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 z-50 items-center justify-center p-4" style="display: none;">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full" onclick="event.stopPropagation()">
+        <form method="POST" action="{{ route('almacen.tickets.reject', $ticket) }}">
+            @csrf
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Rechazar Ticket</h3>
+            </div>
+            
+            <div class="p-6">
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-4">
+                        ¿Estás seguro de que deseas rechazar este ticket? Esta acción notificará al solicitante.
+                    </p>
+                    
+                    <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Motivo del rechazo <span class="text-red-500">*</span>
+                    </label>
+                    <textarea name="rejection_reason" 
+                              id="rejection_reason" 
+                              rows="4" 
+                              required
+                              maxlength="200"
+                              class="w-full border-gray-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                              placeholder="Explica el motivo por el cual se rechaza este ticket..."></textarea>
+                    <p class="mt-1 text-xs text-gray-500">Máximo 200 caracteres</p>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                <button type="button" 
+                        onclick="closeRejectModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                    Rechazar Ticket
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -905,6 +971,48 @@ document.addEventListener('DOMContentLoaded', function() {
         // Actualizar el texto de la calificación
         const ratingLabels = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
         ratingText.textContent = ratingLabels[rating];
+    }
+
+    // Cerrar modales con tecla Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeRejectModal();
+            closeImageModal();
+        }
+    });
+});
+
+// Modal de Rechazo - Funciones globales
+function openRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    }
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        // Limpiar el textarea
+        const textarea = document.getElementById('rejection_reason');
+        if (textarea) {
+            textarea.value = '';
+        }
+    }
+}
+
+// Event listener para cerrar modal al hacer clic fuera
+document.addEventListener('DOMContentLoaded', function() {
+    const rejectModalElement = document.getElementById('rejectModal');
+    if (rejectModalElement) {
+        rejectModalElement.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeRejectModal();
+            }
+        });
     }
 });
 </script>

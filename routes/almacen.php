@@ -39,6 +39,8 @@ Route::middleware(['auth'])
         // Asignación y gestión de tickets
         Route::post('/tickets/{ticket}/assign', [TicketController::class, 'assign'])
             ->name('tickets.assign');
+        Route::post('/tickets/{ticket}/reject', [TicketController::class, 'reject'])
+            ->name('tickets.reject');
         Route::post('/tickets/{ticket}/progress', [TicketController::class, 'addProgress'])
             ->name('tickets.progress');
         Route::post('/tickets/{ticket}/complete', [TicketController::class, 'complete'])

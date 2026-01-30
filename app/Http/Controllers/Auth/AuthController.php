@@ -25,24 +25,41 @@ class AuthController extends Controller
     {
         try {
             $auth0User = Socialite::driver('auth0')->user();
-            
-            // Buscar o crear usuario
-            $user = User::updateOrCreate(
-                ['provider_id' => $auth0User->getId()],
-                [
-                    'name' => $auth0User->getName(),
-                    'email' => $auth0User->getEmail(),
-                    'provider_id' => $auth0User->getId(),
-                    'avatar' => $auth0User->getAvatar(),
-                    'provider' => 'auth0',
-                    'last_login_at' => now(),
-                ]
-            );
+            $email = $auth0User->getEmail();
 
-            // Autenticar usuario
+            if (!str_ends_with(strtolower($email), '@gptservices.com')) {
+                return redirect()->route('login')
+                    ->withErrors(['error' => 'Solo se permiten cuentas del dominio @gptservices.com']);
+            }
+            
+            $user = User::where('provider_id', $auth0User->getId())
+                ->orWhere('email', $email)
+                ->first();
+
+            $isNewUser = !$user;
+
+            if (!$user) {
+                $user = new User();
+                $user->email = $email;
+            }
+
+            $user->fill([
+                'name' => $auth0User->getName(),
+                'email' => $email,
+                'provider_id' => $auth0User->getId(),
+                'avatar' => $auth0User->getAvatar(),
+                'provider' => 'auth0',
+                'last_login_at' => now(),
+            ]);
+
+            $user->save();
+
+            if ($isNewUser || $user->roles()->count() === 0) {
+                $user->assignRole('solicitante');
+            }
+
             Auth::login($user);
 
-            // Redirigir según el rol
             return $this->redirectByRole($user);
 
         } catch (\Exception $e) {
@@ -56,11 +73,7 @@ class AuthController extends Controller
      */
     private function redirectByRole(User $user)
     {
-        return match($user->role) {
-            'almacen' => redirect()->route('almacen.dashboard'),
-            'admin' => redirect()->route('admin.dashboard'),
-            default => redirect()->route('home'),
-        };
+        return redirect()->route('home');
     }
 
     /**
