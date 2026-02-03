@@ -22,6 +22,8 @@ Route::middleware(['auth', 'admin'])
         // Dashboard
         Route::get('/dashboard', [AdminController::class, 'dashboard'])
             ->name('dashboard');
+        Route::get('/dashboard/export', [AdminController::class, 'exportDashboard'])
+            ->name('dashboard.export');
         
         // Gestión de usuarios
         Route::get('/users', [AdminController::class, 'users'])
