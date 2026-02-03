@@ -103,6 +103,14 @@ class Ticket extends Model
     }
 
     /**
+     * Scope para tickets disponibles para almacén (pendientes o en proceso)
+     */
+    public function scopeDisponiblesAlmacen($query)
+    {
+        return $query->whereIn('status', [self::STATUS_PENDIENTE, self::STATUS_EN_PROCESO]);
+    }
+
+    /**
      * Métodos de estado
      */
     public function isPendiente(): bool

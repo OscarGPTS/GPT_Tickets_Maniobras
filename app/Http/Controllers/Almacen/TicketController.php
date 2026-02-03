@@ -35,12 +35,16 @@ class TicketController extends Controller
     }
 
     /**
-     * Listar tickets pendientes
+     * Listar tickets pendientes y disponibles para almacén
      */
     public function pending()
     {
-        $tickets = Ticket::pendientes()
-            ->with(['user', 'solicitudImages'])
+        // Mostrar tickets pendientes (sin asignar) o en_proceso (cualquier usuario de almacén puede verlos)
+        $tickets = Ticket::where(function($query) {
+                $query->where('status', 'pendiente')
+                      ->orWhere('status', 'en_proceso');
+            })
+            ->with(['user', 'solicitudImages', 'assignedTo'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -58,19 +62,8 @@ class TicketController extends Controller
      */
     public function mine(Request $request)
     {
-        $query = Ticket::where('assigned_to', Auth::id())
-            ->with(['user', 'images', 'survey']);
-
-        // Filtro por estado
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-
-        // Priorizar los que están en proceso y luego ordenar por más recientes
-        $tickets = $query
-            ->orderByRaw("CASE WHEN status = 'en_proceso' THEN 0 ELSE 1 END")
-            ->orderByDesc('assigned_at')
-            ->orderByDesc('created_at')
+        $tickets = Ticket::where('status', 'en_proceso')->orWhere('status', 'pendiente')
+            ->with(['user', 'assignedTo', 'images', 'survey'])->orderByDesc('created_at')
             ->paginate(15);
 
         // Estadísticas del usuario
@@ -87,6 +80,48 @@ class TicketController extends Controller
         ];
 
         return view('almacen.my-tickets-table', compact('tickets', 'stats'));
+    }
+
+    /**
+     * Historial completo de tickets atendidos por el usuario
+     */
+    public function history(Request $request)
+    {
+        // Query base - todos los tickets asignados al usuario
+        $query = Ticket::where('assigned_to', Auth::id())
+            ->with(['user', 'assignedTo', 'images', 'survey'])
+            ->whereNotIn('status', ['cancelado']);
+
+        // Aplicar filtro de estado si existe
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Aplicar filtro de fecha si existe
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $tickets = $query->orderByDesc('created_at')->paginate(20);
+
+        // Estadísticas del usuario
+        $stats = [
+            'total' => Ticket::where('assigned_to', Auth::id())->whereNotIn('status', ['cancelado'])->count(),
+            'pendiente' => Ticket::where('assigned_to', Auth::id())->where('status', 'pendiente')->count(),
+            'en_proceso' => Ticket::where('assigned_to', Auth::id())->where('status', 'en_proceso')->count(),
+            'completados' => Ticket::where('assigned_to', Auth::id())->where('status', 'finalizado')->count(),
+            'promedio_calificacion' => round(
+                \App\Models\Survey::whereHas('ticket', function($q) {
+                    $q->where('assigned_to', Auth::id());
+                })->whereNotNull('completed_at')->avg('rating') ?? 0, 
+                1
+            ),
+        ];
+
+        return view('almacen.tickets-history', compact('tickets', 'stats'));
     }
 
     /**
@@ -107,18 +142,18 @@ class TicketController extends Controller
 
     /**
      * Asignar ticket
-     * - Personal de almacén: se asigna a sí mismo
+     * - Personal de almacén: se asigna a sí mismo automáticamente (sin necesidad de autorización admin)
      * - Administrador: asigna a un usuario de almacén específico
      */
     public function assign(Request $request, Ticket $ticket)
     {
-        // Verificar que el ticket no esté cancelado
+        // Verificar que el ticket no esté cancelado o finalizado
         if ($ticket->status === 'cancelado') {
             return back()->withErrors(['error' => 'No se puede asignar un ticket cancelado.']);
         }
         
-        if (!$ticket->isPendiente()) {
-            return back()->withErrors(['error' => 'Este ticket ya ha sido asignado.']);
+        if ($ticket->status === 'finalizado') {
+            return back()->withErrors(['error' => 'Este ticket ya ha sido finalizado.']);
         }
 
         DB::beginTransaction();
@@ -138,7 +173,8 @@ class TicketController extends Controller
                 
                 $ticket->assignTo($assignedUser);
             } else {
-                // Personal de almacén se asigna a sí mismo
+                // Personal de almacén se asigna a sí mismo automáticamente
+                // Permitir reasignación si el usuario de almacén quiere tomar el ticket
                 $ticket->assignTo(Auth::user());
             }
 
@@ -179,9 +215,14 @@ class TicketController extends Controller
      */
     public function addProgress(Request $request, Ticket $ticket)
     {
-        // Verificar que es el ticket asignado al usuario actual
-        if ($ticket->assigned_to !== Auth::id()) {
+        // Verificar que el usuario es de almacén o tiene el ticket asignado
+        if (!Auth::user()->isAlmacen() && $ticket->assigned_to !== Auth::id()) {
             abort(403, 'No puedes agregar progreso a este ticket.');
+        }
+
+        // Si es usuario de almacén y el ticket no está asignado o está asignado a otro, reasignar
+        if (Auth::user()->isAlmacen() && $ticket->assigned_to !== Auth::id()) {
+            $ticket->assignTo(Auth::user());
         }
 
         $request->validate([
@@ -205,7 +246,7 @@ class TicketController extends Controller
                     ]);
                 }
             }
-
+ 
             // Actualizar estado a en_proceso si está pendiente
             if ($ticket->status === 'pendiente') {
                 $ticket->update(['status' => 'en_proceso']);
@@ -232,15 +273,20 @@ class TicketController extends Controller
             return back()->withErrors(['error' => 'No se puede completar un ticket cancelado.']);
         }
         
-        // Verificar permisos
-        if ($ticket->assigned_to !== Auth::id() || !$ticket->isEnProceso()) {
-            abort(403, 'No puedes completar este ticket.');
+        // Verificar que el usuario es de almacén
+        if (!Auth::user()->isAlmacen()) {
+            abort(403, 'No tienes permisos para completar este ticket.');
+        }
+
+        // Si es usuario de almacén y el ticket no está asignado o está asignado a otro, reasignar
+        if ($ticket->assigned_to !== Auth::id()) {
+            $ticket->assignTo(Auth::user());
         }
 
         $request->validate([
             'work_evidence' => 'required|string',
             'evidence_images' => 'nullable|array|max:5',
-            'evidence_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'evidence_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         DB::beginTransaction();
