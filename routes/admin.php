@@ -68,5 +68,4 @@ Route::middleware(['auth', 'admin'])
             ->name('notifications.destroy');
         Route::delete('/notifications-read/delete-all', [NotificationController::class, 'deleteAllRead'])
             ->name('notifications.delete-all-read');
-        
     });

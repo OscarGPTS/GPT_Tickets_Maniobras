@@ -4,6 +4,18 @@
 
 @section('content')
 <div class="max-w-4xl mx-auto">
+    @php
+        // Determinar el prefijo de ruta según el rol del usuario
+        $routePrefix = '';
+        if(auth()->user()->isAdmin()) {
+            $routePrefix = 'admin.';
+        } elseif(auth()->user()->isAlmacen()) {
+            $routePrefix = 'almacen.';
+        } elseif(auth()->user()->isSolicitante()) {
+            $routePrefix = 'solicitante.';
+        }
+    @endphp
+
     <!-- Header -->
     <div class="mb-6 flex items-center justify-between">
         <div>
@@ -16,7 +28,7 @@
         @if(auth()->user()->unreadNotifications->count() > 0 || auth()->user()->readNotifications->count() > 0)
             <div class="flex items-center space-x-2">
                 @if(auth()->user()->unreadNotifications->count() > 0)
-                    <form method="POST" action="{{ route('notifications.mark-all-read') }}" class="inline">
+                    <form method="POST" action="{{ route($routePrefix . 'notifications.mark-all-read') }}" class="inline">
                         @csrf
                         <button type="submit" 
                                 class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -27,7 +39,7 @@
                 @endif
                 
                 @if(auth()->user()->readNotifications->count() > 0)
-                    <form method="POST" action="{{ route('notifications.delete-all-read') }}" class="inline">
+                    <form method="POST" action="{{ route($routePrefix . 'notifications.delete-all-read') }}" class="inline">
                         @csrf
                         @method('DELETE')
                         <button type="submit" 
@@ -50,12 +62,19 @@
                     <div class="flex items-start space-x-4">
                         <!-- Icon -->
                         <div class="flex-shrink-0">
-                            <div class="h-10 w-10 rounded-full flex items-center justify-center
-                                {{ $notification->data['color'] === 'blue' ? 'bg-blue-100 text-blue-600' : '' }}
-                                {{ $notification->data['color'] === 'green' ? 'bg-green-100 text-green-600' : '' }}
-                                {{ $notification->data['color'] === 'yellow' ? 'bg-yellow-100 text-yellow-600' : '' }}
-                                {{ $notification->data['color'] === 'indigo' ? 'bg-indigo-100 text-indigo-600' : '' }}
-                                {{ $notification->data['color'] === 'red' ? 'bg-red-100 text-red-600' : '' }}">
+                            @php
+                                $color = $notification->data['color'] ?? 'blue';
+                                $colorClasses = match($color) {
+                                    'blue' => 'bg-blue-100 text-blue-600',
+                                    'green' => 'bg-green-100 text-green-600',
+                                    'yellow' => 'bg-yellow-100 text-yellow-600',
+                                    'indigo' => 'bg-indigo-100 text-indigo-600',
+                                    'red' => 'bg-red-100 text-red-600',
+                                    'purple' => 'bg-purple-100 text-purple-600',
+                                    default => 'bg-gray-100 text-gray-600',
+                                };
+                            @endphp
+                            <div class="h-10 w-10 rounded-full flex items-center justify-center {{ $colorClasses }}">
                                 <i class="fas {{ $notification->data['icon'] ?? 'fa-bell' }}"></i>
                             </div>
                         </div>
@@ -65,7 +84,7 @@
                             <div class="flex items-start justify-between">
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900">
-                                        {{ $notification->data['message'] }}
+                                        {{ $notification->data['message'] ?? 'Notificación' }}
                                     </p>
                                     <p class="mt-1 text-xs text-gray-500">
                                         <i class="far fa-clock mr-1"></i>
@@ -83,14 +102,14 @@
                             <!-- Actions -->
                             <div class="mt-3 flex items-center space-x-3">
                                 @if(isset($notification->data['action_url']))
-                                    <a href="{{ route('notifications.show', $notification->id) }}" 
+                                    <a href="{{ route($routePrefix . 'notifications.show', $notification->id) }}" 
                                        class="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-900">
                                         Ver detalles
                                         <i class="fas fa-arrow-right ml-1 text-xs"></i>
                                     </a>
                                 @endif
                                 
-                                <form method="POST" action="{{ route('notifications.destroy', $notification->id) }}" class="inline">
+                                <form method="POST" action="{{ route($routePrefix . 'notifications.destroy', $notification->id) }}" class="inline">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
