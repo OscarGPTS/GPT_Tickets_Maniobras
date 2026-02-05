@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Notifications\TicketCreatedNotification;
 use App\Notifications\TicketCancelledNotification;
 use App\Notifications\TicketPendingApprovalNotification;
+use App\Notifications\TicketUpdatedNotification;
 use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -229,6 +230,14 @@ class TicketController extends Controller
                     ]);
                 }
             }
+
+            // Notificar a administradores y al usuario asignado (si existe)
+            $usersToNotify = User::role('admin')->get();
+            if ($ticket->assigned_user_id) {
+                $usersToNotify->push($ticket->assignedUser);
+            }
+            
+            Notification::send($usersToNotify, new TicketUpdatedNotification($ticket, Auth::user()));
 
             DB::commit();
 

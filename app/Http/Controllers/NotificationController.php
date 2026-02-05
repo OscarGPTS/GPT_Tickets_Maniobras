@@ -16,8 +16,8 @@ class NotificationController extends Controller
             ->notifications()
             ->paginate(15);
 
-        // Marcar notificaciones como leídas cuando se visualizan
-        Auth::user()->unreadNotifications->markAsRead();
+        // NO marcar automáticamente como leídas al visualizar la lista
+        // El usuario debe marcarlas manualmente
 
         return view('notifications.index', compact('notifications'));
     }

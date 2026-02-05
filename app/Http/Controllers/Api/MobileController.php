@@ -9,6 +9,9 @@ use App\Models\TicketImage;
 use App\Models\Survey;
 use App\Mail\TicketCompletedMail;
 use App\Notifications\TicketCompletedNotification;
+use App\Notifications\TicketAssignedNotification;
+use App\Notifications\TicketAssignedToWarehouseNotification;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +20,12 @@ use Illuminate\Support\Facades\Log;
 
 class MobileController extends Controller
 {
+    protected $fcmService;
+
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     /**
      * Obtener tickets para usuarios de almacén
      * POST /api/mobile/tickets
@@ -52,7 +61,7 @@ class MobileController extends Controller
 
         // Obtener tickets asignados al usuario (en_proceso y pendientes)
         $tickets = Ticket::whereIn('status', [Ticket::STATUS_EN_PROCESO, Ticket::STATUS_PENDIENTE])
-            ->with(['user:id,name,email', 'solicitudImages:id,ticket_id,file_path', 'evidenciaImages:id,ticket_id,file_path'])
+            ->with(['user:id,name,email', 'assignedTo:id,name,email', 'solicitudImages:id,ticket_id,file_path', 'evidenciaImages:id,ticket_id,file_path'])
             ->orderByRaw("CASE WHEN status = 'en_proceso' THEN 0 ELSE 1 END")
             ->orderBy('assigned_at', 'desc')
             ->orderBy('created_at', 'desc')
@@ -76,6 +85,11 @@ class MobileController extends Controller
                     'nombre' => $ticket->user->name,
                     'email' => $ticket->user->email,
                 ],
+                'asignado_a' => $ticket->assignedTo ? [
+                    'id' => $ticket->assignedTo->id,
+                    'nombre' => $ticket->assignedTo->name,
+                    'email' => $ticket->assignedTo->email,
+                ] : null,
                 'imagenes_solicitud' => $ticket->solicitudImages->map(function ($image) {
                     return [
                         'id' => $image->id,
@@ -207,6 +221,17 @@ class MobileController extends Controller
                 // Enviar notificación en la base de datos
                 $ticket->user->notify(new TicketCompletedNotification($ticket));
                 
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketCompleted(
+                    $ticket->user_id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de ticket completado enviada al usuario #' . $ticket->user_id);
+                }
+                
                 Log::info('Notificación de ticket completado enviada desde API móvil al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 // No fallar el proceso si el correo falla, solo registrar el error
@@ -233,6 +258,162 @@ class MobileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al completar el ticket: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener usuarios de almacén
+     * GET /api/mobile/almacen-users
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAlmacenUsers()
+    {
+        try {
+            $almacenUsers = User::role('almacen')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuarios de almacén obtenidos correctamente',
+                'data' => [
+                    'usuarios' => $almacenUsers->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'nombre' => $user->name,
+                            'email' => $user->email
+                        ];
+                    })
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener usuarios: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Asignar ticket a usuario de almacén
+     * POST /api/mobile/tickets/assign
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function assignTicket(Request $request)
+    {
+        // Validar datos
+        $validator = Validator::make($request->all(), [
+            'ticket_id' => 'required|exists:tickets,id',
+            'assigned_to' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Buscar el ticket con relaciones
+        $ticket = Ticket::with(['user', 'assignedTo'])->find($request->ticket_id);
+
+        if (!$ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ticket no encontrado'
+            ], 404);
+        }
+
+        // Verificar que el ticket no esté cancelado
+        if ($ticket->status === 'cancelado') {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se puede asignar un ticket cancelado'
+            ], 400);
+        }
+
+        // Verificar que el ticket no esté finalizado
+        if ($ticket->status === 'finalizado') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este ticket ya ha sido finalizado'
+            ], 400);
+        }
+
+        // Buscar usuario a asignar
+        $assignedUser = User::find($request->assigned_to);
+
+        // Verificar que el usuario tenga rol de almacén
+        if (!$assignedUser->hasRole('almacen')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo puedes asignar tickets a personal de almacén'
+            ], 403);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Asignar ticket
+            $ticket->assignTo($assignedUser);
+
+            // Notificar al usuario solicitante
+            try {
+                $ticket->user->notify(new TicketAssignedNotification($ticket));
+                Log::info('Notificación de asignación enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación de ticket asignado: ' . $e->getMessage());
+            }
+
+            // Notificar a la persona asignada de almacén
+            try {
+                $assignedUser->notify(new TicketAssignedToWarehouseNotification($ticket));
+                
+                // Enviar notificación push FCM al usuario asignado
+                $fcmResult = $this->fcmService->notifyTicketAssigned(
+                    $assignedUser->id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de asignación enviada al almacén #' . $assignedUser->id);
+                }
+                
+                Log::info('Notificación de asignación enviada al miembro de almacén #' . $assignedUser->id . ' para ticket #' . $ticket->id);
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificación al miembro de almacén asignado: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket asignado exitosamente a ' . $assignedUser->name,
+                'data' => [
+                    'ticket_id' => $ticket->id,
+                    'codigo' => $ticket->formatted_code,
+                    'status' => $ticket->status,
+                    'assigned_at' => $ticket->assigned_at->format('Y-m-d H:i:s'),
+                    'asignado_a' => [
+                        'id' => $assignedUser->id,
+                        'nombre' => $assignedUser->name,
+                        'email' => $assignedUser->email
+                    ]
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al asignar el ticket: ' . $e->getMessage()
             ], 500);
         }
     }

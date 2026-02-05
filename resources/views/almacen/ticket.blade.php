@@ -420,8 +420,33 @@
             </div>
         @endif
 
-        <!-- Formulario para Completar (Solo si está asignado al usuario, no completado y no cancelado) -->
-        @if($ticket->assigned_to === auth()->id() && $ticket->status !== 'completado' && $ticket->status !== 'cancelado')
+        <!-- Formulario para Completar (Usuarios de almacén pueden trabajar en tickets no completados ni cancelados) -->
+        @if(auth()->user()->isAlmacen() && $ticket->status !== 'finalizado' && $ticket->status !== 'cancelado')
+            @if(!$ticket->assigned_to || $ticket->assigned_to !== auth()->id())
+                <!-- Mensaje informativo de auto-asignación -->
+                <div class="mb-6 bg-blue-50 border-l-4 border-blue-500 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Atención de Ticket</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                @if(!$ticket->assigned_to)
+                                    <p>Este ticket no está asignado aún. Al agregar progreso o completarlo, se te asignará automáticamente.</p>
+                                @else
+                                    <p>Este ticket está asignado a <strong>{{ $ticket->assignedTo->name }}</strong>. Al agregar progreso o completarlo, se te reasignará automáticamente.</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        @endif
+
+        @if((auth()->user()->isAlmacen() || $ticket->assigned_to === auth()->id()) && $ticket->status !== 'finalizado' && $ticket->status !== 'cancelado')
 
         <!-- Mensajes de Error -->
         @if($errors->any())

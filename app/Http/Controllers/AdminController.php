@@ -6,9 +6,11 @@ use App\Models\User;
 use App\Models\Ticket;
 use App\Models\Survey;
 use App\Exports\TicketsExport;
+use App\Exports\DashboardExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
@@ -182,7 +184,7 @@ class AdminController extends Controller
         ]);
 
         // Generar contraseña aleatoria si no se proporciona (usuarios Auth0/Google)
-        $password = $request->filled('password') ? $request->password : \Str::random(16);
+        $password = $request->filled('password') ? $request->password : Str::random(16);
 
         // Crear nuevo usuario
         $user = User::create([
@@ -393,6 +395,20 @@ class AdminController extends Controller
         $filename = 'tickets_' . now()->format('Y-m-d_His') . '.xlsx';
 
         return Excel::download(new TicketsExport($filters), $filename);
+    }
+
+    /**
+     * Exportar reporte completo del dashboard a Excel
+     */
+    public function exportDashboard()
+    {
+        $this->checkAdminPermission();
+
+        // Crear un reporte completo con todas las estadísticas del dashboard
+        $export = new DashboardExport();
+        $filename = 'reporte_dashboard_' . now()->format('Y-m-d_His') . '.xlsx';
+
+        return Excel::download($export, $filename);
     }
 
     /**

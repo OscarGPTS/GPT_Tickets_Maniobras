@@ -22,6 +22,8 @@ Route::middleware(['auth', 'admin'])
         // Dashboard
         Route::get('/dashboard', [AdminController::class, 'dashboard'])
             ->name('dashboard');
+        Route::get('/dashboard/export', [AdminController::class, 'exportDashboard'])
+            ->name('dashboard.export');
         
         // Gestión de usuarios
         Route::get('/users', [AdminController::class, 'users'])
@@ -66,5 +68,4 @@ Route::middleware(['auth', 'admin'])
             ->name('notifications.destroy');
         Route::delete('/notifications-read/delete-all', [NotificationController::class, 'deleteAllRead'])
             ->name('notifications.delete-all-read');
-        
     });

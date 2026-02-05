@@ -15,6 +15,15 @@
                         <p class="text-gray-600 mt-2">Gestiona usuarios, roles y supervisa el sistema</p>
                     </div>
                     <div class="flex items-center justify-between flex-col sm:flex-row gap-4">
+                        <!-- Botón de Descarga de Reporte -->
+                        <a href="{{ route('admin.dashboard.export') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-md shadow-sm text-sm font-medium hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            Descargar Reporte Excel
+                        </a>
+
                         <div class="text-right">
                             <p class="text-sm text-gray-500">Última actualización</p>
                             <p class="text-lg font-semibold text-gray-900">{{ now()->format('d/m/Y H:i') }}</p>

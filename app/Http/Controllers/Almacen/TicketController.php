@@ -11,6 +11,8 @@ use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketAssignedToWarehouseNotification;
 use App\Notifications\TicketCompletedNotification;
 use App\Mail\TicketCompletedMail;
+use App\Mail\TicketRejectedMail;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,27 +22,28 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
 {
+    protected $fcmService;
+
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     /**
      * Constructor
      */
-    public function __construct()
-    {
-        /* $this->middleware('auth');
-        $this->middleware(function ($request, $next) {
-            if (!Auth::user()->isAlmacen() && !Auth::user()->isAdmin()) {
-                abort(403, 'No tienes acceso al panel de almacén.');
-            }
-            return $next($request);
-        }); */
-    }
+  
 
     /**
-     * Listar tickets pendientes
+     * Listar tickets pendientes y disponibles para almacén
      */
     public function pending()
     {
-        $tickets = Ticket::pendientes()
-            ->with(['user', 'solicitudImages'])
+        // Mostrar tickets pendientes (sin asignar) o en_proceso (cualquier usuario de almacén puede verlos)
+        $tickets = Ticket::where(function($query) {
+                $query->where('status', 'pendiente')
+                      ->orWhere('status', 'en_proceso');
+            })
+            ->with(['user', 'solicitudImages', 'assignedTo'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -58,19 +61,8 @@ class TicketController extends Controller
      */
     public function mine(Request $request)
     {
-        $query = Ticket::where('assigned_to', Auth::id())
-            ->with(['user', 'images', 'survey']);
-
-        // Filtro por estado
-        if ($request->has('status') && $request->status) {
-            $query->where('status', $request->status);
-        }
-
-        // Priorizar los que están en proceso y luego ordenar por más recientes
-        $tickets = $query
-            ->orderByRaw("CASE WHEN status = 'en_proceso' THEN 0 ELSE 1 END")
-            ->orderByDesc('assigned_at')
-            ->orderByDesc('created_at')
+        $tickets = Ticket::where('status', 'en_proceso')->orWhere('status', 'pendiente')
+            ->with(['user', 'assignedTo', 'images', 'survey'])->orderByDesc('created_at')
             ->paginate(15);
 
         // Estadísticas del usuario
@@ -87,6 +79,48 @@ class TicketController extends Controller
         ];
 
         return view('almacen.my-tickets-table', compact('tickets', 'stats'));
+    }
+
+    /**
+     * Historial completo de tickets atendidos por el usuario
+     */
+    public function history(Request $request)
+    {
+        // Query base - todos los tickets asignados al usuario
+        $query = Ticket::where('assigned_to', Auth::id())
+            ->with(['user', 'assignedTo', 'images', 'survey'])
+            ->whereNotIn('status', ['cancelado']);
+
+        // Aplicar filtro de estado si existe
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        // Aplicar filtro de fecha si existe
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $tickets = $query->orderByDesc('created_at')->paginate(20);
+
+        // Estadísticas del usuario
+        $stats = [
+            'total' => Ticket::where('assigned_to', Auth::id())->whereNotIn('status', ['cancelado'])->count(),
+            'pendiente' => Ticket::where('assigned_to', Auth::id())->where('status', 'pendiente')->count(),
+            'en_proceso' => Ticket::where('assigned_to', Auth::id())->where('status', 'en_proceso')->count(),
+            'completados' => Ticket::where('assigned_to', Auth::id())->where('status', 'finalizado')->count(),
+            'promedio_calificacion' => round(
+                \App\Models\Survey::whereHas('ticket', function($q) {
+                    $q->where('assigned_to', Auth::id());
+                })->whereNotNull('completed_at')->avg('rating') ?? 0, 
+                1
+            ),
+        ];
+
+        return view('almacen.tickets-history', compact('tickets', 'stats'));
     }
 
     /**
@@ -107,18 +141,18 @@ class TicketController extends Controller
 
     /**
      * Asignar ticket
-     * - Personal de almacén: se asigna a sí mismo
+     * - Personal de almacén: se asigna a sí mismo automáticamente (sin necesidad de autorización admin)
      * - Administrador: asigna a un usuario de almacén específico
      */
     public function assign(Request $request, Ticket $ticket)
     {
-        // Verificar que el ticket no esté cancelado
+        // Verificar que el ticket no esté cancelado o finalizado
         if ($ticket->status === 'cancelado') {
             return back()->withErrors(['error' => 'No se puede asignar un ticket cancelado.']);
         }
         
-        if (!$ticket->isPendiente()) {
-            return back()->withErrors(['error' => 'Este ticket ya ha sido asignado.']);
+        if ($ticket->status === 'finalizado') {
+            return back()->withErrors(['error' => 'Este ticket ya ha sido finalizado.']);
         }
 
         DB::beginTransaction();
@@ -138,7 +172,8 @@ class TicketController extends Controller
                 
                 $ticket->assignTo($assignedUser);
             } else {
-                // Personal de almacén se asigna a sí mismo
+                // Personal de almacén se asigna a sí mismo automáticamente
+                // Permitir reasignación si el usuario de almacén quiere tomar el ticket
                 $ticket->assignTo(Auth::user());
             }
 
@@ -153,6 +188,18 @@ class TicketController extends Controller
             // Notificar a la persona asignada de almacén
             try {
                 $ticket->assignedTo->notify(new TicketAssignedToWarehouseNotification($ticket));
+                
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketAssigned(
+                    $ticket->assignedTo->id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de asignación enviada al almacén #' . $ticket->assignedTo->id);
+                }
+                
                 Log::info('Notificación de asignación enviada al miembro de almacén #' . $ticket->assignedTo->id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificación al miembro de almacén asignado: ' . $e->getMessage());
@@ -179,9 +226,14 @@ class TicketController extends Controller
      */
     public function addProgress(Request $request, Ticket $ticket)
     {
-        // Verificar que es el ticket asignado al usuario actual
-        if ($ticket->assigned_to !== Auth::id()) {
+        // Verificar que el usuario es de almacén o tiene el ticket asignado
+        if (!Auth::user()->isAlmacen() && $ticket->assigned_to !== Auth::id()) {
             abort(403, 'No puedes agregar progreso a este ticket.');
+        }
+
+        // Si es usuario de almacén y el ticket no está asignado o está asignado a otro, reasignar
+        if (Auth::user()->isAlmacen() && $ticket->assigned_to !== Auth::id()) {
+            $ticket->assignTo(Auth::user());
         }
 
         $request->validate([
@@ -205,7 +257,7 @@ class TicketController extends Controller
                     ]);
                 }
             }
-
+ 
             // Actualizar estado a en_proceso si está pendiente
             if ($ticket->status === 'pendiente') {
                 $ticket->update(['status' => 'en_proceso']);
@@ -232,15 +284,20 @@ class TicketController extends Controller
             return back()->withErrors(['error' => 'No se puede completar un ticket cancelado.']);
         }
         
-        // Verificar permisos
-        if ($ticket->assigned_to !== Auth::id() || !$ticket->isEnProceso()) {
-            abort(403, 'No puedes completar este ticket.');
+        // Verificar que el usuario es de almacén
+        if (!Auth::user()->isAlmacen()) {
+            abort(403, 'No tienes permisos para completar este ticket.');
+        }
+
+        // Si es usuario de almacén y el ticket no está asignado o está asignado a otro, reasignar
+        if ($ticket->assigned_to !== Auth::id()) {
+            $ticket->assignTo(Auth::user());
         }
 
         $request->validate([
             'work_evidence' => 'required|string',
             'evidence_images' => 'nullable|array|max:5',
-            'evidence_images.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+            'evidence_images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         DB::beginTransaction();
@@ -286,6 +343,17 @@ class TicketController extends Controller
                 // También enviar notificación de base de datos
                 $ticket->user->notify(new TicketCompletedNotification($ticket));
                 
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketCompleted(
+                    $ticket->user_id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de ticket completado enviada al usuario #' . $ticket->user_id);
+                }
+                
                 Log::info('Notificación de ticket completado enviada al usuario #' . $ticket->user_id . ' con CC a jrlara@gptservices.com y al asignado para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificación de ticket completado: ' . $e->getMessage());
@@ -328,7 +396,18 @@ class TicketController extends Controller
             // Enviar notificación al usuario solicitante
             try {
                 Mail::to($ticket->user->email)
-                    ->send(new \App\Mail\TicketRejectedMail($ticket));
+                    ->send(new TicketRejectedMail($ticket));
+                
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketRejected(
+                    $ticket->user_id,
+                    $ticket->id,
+                    $request->rejection_reason
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de ticket rechazado enviada al usuario #' . $ticket->user_id);
+                }
                 
                 Log::info('Notificación de rechazo enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {

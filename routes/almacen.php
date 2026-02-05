@@ -30,6 +30,8 @@ Route::middleware(['auth'])
             ->name('tickets.pending');
         Route::get('/tickets/mine', [TicketController::class, 'mine'])
             ->name('tickets.mine');
+        Route::get('/tickets/history', [TicketController::class, 'history'])
+            ->name('tickets.history');
         Route::get('/tickets/export', [TicketController::class, 'export'])
             ->name('tickets.export');
         Route::get('/tickets/{ticket}', [TicketController::class, 'show'])

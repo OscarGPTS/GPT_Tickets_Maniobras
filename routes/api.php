@@ -22,4 +22,10 @@ Route::prefix('mobile')->group(function () {
     // Completar ticket
     Route::post('/tickets/complete', [MobileController::class, 'completeTicket']);
     
+    // Obtener usuarios de almacén
+    Route::get('/almacen-users', [MobileController::class, 'getAlmacenUsers']);
+    
+    // Asignar ticket a usuario de almacén
+    Route::post('/tickets/assign', [MobileController::class, 'assignTicket']);
+    
 });

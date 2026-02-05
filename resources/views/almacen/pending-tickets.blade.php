@@ -11,8 +11,16 @@
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-900">Tickets Pendientes</h1>
-                        <p class="text-gray-600 mt-2">Gestiona y asigna tickets que están esperando atención</p>
+                        <h1 class="text-3xl font-bold text-gray-900">Tickets Disponibles</h1>
+                        <p class="text-gray-600 mt-2">Tickets pendientes y en proceso que puedes atender - Auto-asignación disponible</p>
+                        @if(auth()->user()->isAlmacen())
+                        <p class="text-sm text-blue-600 mt-1">
+                            <svg class="inline w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                            Puedes asignarte cualquier ticket automáticamente sin aprobación del administrador
+                        </p>
+                        @endif
                     </div>
                     <div class="flex space-x-3">
                         <button onclick="document.getElementById('exportForm').submit()" 
@@ -37,7 +45,7 @@
         </form>
 
         <!-- Estadísticas Rápidas -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -46,8 +54,8 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Total Pendientes</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $tickets->total() }}</p>
+                        <p class="text-sm font-medium text-gray-500">Sin Asignar</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'pendiente')->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -56,12 +64,26 @@
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Nuevos Hoy</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'pendiente')->whereDate('created_at', today())->count() }}</p>
+                        <p class="text-sm font-medium text-gray-500">En Proceso</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'en_proceso')->count() }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Disponibles</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $tickets->total() }}</p>
                     </div>
                 </div>
             </div>
@@ -70,12 +92,12 @@
                 <div class="flex items-center">
                     <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                         <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <p class="text-sm font-medium text-gray-500">Promedio Tiempo</p>
-                        <p class="text-2xl font-bold text-gray-900">2.5h</p>
+                        <p class="text-sm font-medium text-gray-500">Nuevos Hoy</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ \App\Models\Ticket::where('status', 'pendiente')->whereDate('created_at', today())->count() }}</p>
                     </div>
                 </div>
             </div>
@@ -85,7 +107,7 @@
         <div class="bg-white rounded-lg shadow-sm border border-gray-200">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold text-gray-900">Tickets Pendientes</h3>
+                    <h3 class="text-lg font-semibold text-gray-900">Tickets Disponibles para Atención</h3>
                     <div class="flex items-center space-x-4">
                         <span class="text-sm text-gray-500">{{ $tickets->count() }} de {{ $tickets->total() }} tickets</span>
                     </div>
@@ -101,9 +123,15 @@
                                     <h4 class="text-lg font-semibold text-gray-900">
                                         {{ $ticket->formatted_code }} - {{ $ticket->title }}
                                     </h4>
-                                    <span class="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
-                                        Pendiente
-                                    </span>
+                                    @if($ticket->status === 'pendiente')
+                                        <span class="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                            Sin Asignar
+                                        </span>
+                                    @elseif($ticket->status === 'en_proceso')
+                                        <span class="inline-flex px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                            En Proceso
+                                        </span>
+                                    @endif
                                 </div>
 
                                 <p class="text-gray-700 mb-3">{{ Str::limit($ticket->description, 200) }}</p>
@@ -113,8 +141,16 @@
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
-                                        <span>{{ $ticket->user->name }}</span>
+                                        <span><strong>Solicitante:</strong> {{ $ticket->user->name }}</span>
                                     </div>
+                                    @if($ticket->assignedTo)
+                                        <div class="flex items-center text-blue-600">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            <span><strong>Asignado a:</strong> {{ $ticket->assignedTo->name }}</span>
+                                        </div>
+                                    @endif
                                     <div class="flex items-center">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -147,11 +183,15 @@
                                     <form method="POST" action="{{ route('almacen.tickets.assign', $ticket) }}" class="inline">
                                         @csrf
                                         <button type="submit" 
-                                                class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                                                class="w-full inline-flex items-center justify-center px-3 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
-                                            Asignar a Mí
+                                            @if($ticket->assignedTo && $ticket->assignedTo->id !== auth()->id())
+                                                Reasignarme
+                                            @else
+                                                Atender Ticket
+                                            @endif
                                         </button>
                                     </form>
                                 @else
@@ -174,7 +214,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <h3 class="mt-2 text-sm font-medium text-gray-900">¡Excelente trabajo!</h3>
-                        <p class="mt-1 text-sm text-gray-500">No hay tickets pendientes por asignar en este momento</p>
+                        <p class="mt-1 text-sm text-gray-500">No hay tickets disponibles para atender en este momento</p>
+                        <p class="mt-1 text-xs text-gray-400">Los tickets pendientes y en proceso aparecerán aquí</p>
                         <div class="mt-6">
                             <a href="{{ route('almacen.dashboard') }}" 
                                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
