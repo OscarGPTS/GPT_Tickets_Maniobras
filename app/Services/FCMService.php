@@ -154,6 +154,40 @@ class FCMService
         );
     }
 
+    /**
+     * Notificación de ticket completado
+     */
+    public function notifyTicketCompleted(int $userId, int $ticketId, string $ticketTitle): array
+    {
+        return $this->sendToUser(
+            $userId,
+            '✅ Ticket Completado',
+            "Tu ticket #{$ticketId} ha sido completado. Por favor, completa la encuesta de satisfacción.",
+            [
+                'type' => 'ticket_completed',
+                'ticket_id' => (string) $ticketId,
+                'action' => 'complete_survey'
+            ]
+        );
+    }
+
+    /**
+     * Notificación de ticket rechazado
+     */
+    public function notifyTicketRejected(int $userId, int $ticketId, string $reason): array
+    {
+        return $this->sendToUser(
+            $userId,
+            '❌ Ticket Rechazado',
+            "Tu ticket #{$ticketId} ha sido rechazado. Motivo: {$reason}",
+            [
+                'type' => 'ticket_rejected',
+                'ticket_id' => (string) $ticketId,
+                'action' => 'view_ticket'
+            ]
+        );
+    }
+
     protected function getAndroidConfig(): AndroidConfig
     {
         return AndroidConfig::fromArray([

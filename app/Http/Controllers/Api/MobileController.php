@@ -11,6 +11,7 @@ use App\Mail\TicketCompletedMail;
 use App\Notifications\TicketCompletedNotification;
 use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketAssignedToWarehouseNotification;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,12 @@ use Illuminate\Support\Facades\Log;
 
 class MobileController extends Controller
 {
+    protected $fcmService;
+
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     /**
      * Obtener tickets para usuarios de almacén
      * POST /api/mobile/tickets
@@ -214,6 +221,17 @@ class MobileController extends Controller
                 // Enviar notificación en la base de datos
                 $ticket->user->notify(new TicketCompletedNotification($ticket));
                 
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketCompleted(
+                    $ticket->user_id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de ticket completado enviada al usuario #' . $ticket->user_id);
+                }
+                
                 Log::info('Notificación de ticket completado enviada desde API móvil al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 // No fallar el proceso si el correo falla, solo registrar el error
@@ -355,6 +373,18 @@ class MobileController extends Controller
             // Notificar a la persona asignada de almacén
             try {
                 $assignedUser->notify(new TicketAssignedToWarehouseNotification($ticket));
+                
+                // Enviar notificación push FCM al usuario asignado
+                $fcmResult = $this->fcmService->notifyTicketAssigned(
+                    $assignedUser->id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de asignación enviada al almacén #' . $assignedUser->id);
+                }
+                
                 Log::info('Notificación de asignación enviada al miembro de almacén #' . $assignedUser->id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificación al miembro de almacén asignado: ' . $e->getMessage());

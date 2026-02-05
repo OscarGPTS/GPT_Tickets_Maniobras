@@ -11,6 +11,8 @@ use App\Notifications\TicketAssignedNotification;
 use App\Notifications\TicketAssignedToWarehouseNotification;
 use App\Notifications\TicketCompletedNotification;
 use App\Mail\TicketCompletedMail;
+use App\Mail\TicketRejectedMail;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,19 +22,16 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class TicketController extends Controller
 {
+    protected $fcmService;
+
+    public function __construct(FCMService $fcmService)
+    {
+        $this->fcmService = $fcmService;
+    }
     /**
      * Constructor
      */
-    public function __construct()
-    {
-        /* $this->middleware('auth');
-        $this->middleware(function ($request, $next) {
-            if (!Auth::user()->isAlmacen() && !Auth::user()->isAdmin()) {
-                abort(403, 'No tienes acceso al panel de almacén.');
-            }
-            return $next($request);
-        }); */
-    }
+  
 
     /**
      * Listar tickets pendientes y disponibles para almacén
@@ -189,6 +188,18 @@ class TicketController extends Controller
             // Notificar a la persona asignada de almacén
             try {
                 $ticket->assignedTo->notify(new TicketAssignedToWarehouseNotification($ticket));
+                
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketAssigned(
+                    $ticket->assignedTo->id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de asignación enviada al almacén #' . $ticket->assignedTo->id);
+                }
+                
                 Log::info('Notificación de asignación enviada al miembro de almacén #' . $ticket->assignedTo->id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificación al miembro de almacén asignado: ' . $e->getMessage());
@@ -332,6 +343,17 @@ class TicketController extends Controller
                 // También enviar notificación de base de datos
                 $ticket->user->notify(new TicketCompletedNotification($ticket));
                 
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketCompleted(
+                    $ticket->user_id,
+                    $ticket->id,
+                    $ticket->title
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de ticket completado enviada al usuario #' . $ticket->user_id);
+                }
+                
                 Log::info('Notificación de ticket completado enviada al usuario #' . $ticket->user_id . ' con CC a jrlara@gptservices.com y al asignado para ticket #' . $ticket->id);
             } catch (\Exception $e) {
                 Log::error('Error al enviar notificación de ticket completado: ' . $e->getMessage());
@@ -374,7 +396,18 @@ class TicketController extends Controller
             // Enviar notificación al usuario solicitante
             try {
                 Mail::to($ticket->user->email)
-                    ->send(new \App\Mail\TicketRejectedMail($ticket));
+                    ->send(new TicketRejectedMail($ticket));
+                
+                // Enviar notificación push FCM
+                $fcmResult = $this->fcmService->notifyTicketRejected(
+                    $ticket->user_id,
+                    $ticket->id,
+                    $request->rejection_reason
+                );
+                
+                if ($fcmResult['success']) {
+                    Log::info('Notificación FCM de ticket rechazado enviada al usuario #' . $ticket->user_id);
+                }
                 
                 Log::info('Notificación de rechazo enviada al usuario #' . $ticket->user_id . ' para ticket #' . $ticket->id);
             } catch (\Exception $e) {
