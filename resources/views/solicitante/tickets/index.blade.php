@@ -77,7 +77,7 @@
                                 </p>
                             </div>
                             <a href="{{ route('solicitante.tickets.show', $survey->ticket) }}#survey-form" 
-                            class="inline-flex items-center px-4 py-2 bg-yellow-600 text-gray-900 font-medium rounded-lg hover:bg-yellow-700 transition-colors">
+                            class="inline-flex items-center px-4 py-2 bg-yellow-300 text-gray-900 font-medium rounded-lg hover:bg-yellow-700 transition-colors">
                                 <i class="fas fa-star mr-2"></i>
                                 Calificar Ahora
                             </a>
