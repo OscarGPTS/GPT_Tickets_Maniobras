@@ -609,4 +609,150 @@ class MobileController extends Controller
             ]
         ], 200);
     }
+
+    /**
+     * Crear nuevo ticket desde la app móvil (Solicitante)
+     * POST /api/mobile/tickets/create
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function createTicket(Request $request)
+    {
+        // Validar datos
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
+            'titulo' => 'required|string|max:255',
+            'descripcion' => 'required|string',
+            'imagenes' => 'nullable|array|max:5',
+            'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Buscar usuario
+        $user = User::find($request->user_id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ], 404);
+        }
+
+        // Verificar que el usuario tenga rol de solicitante
+        if (!$user->hasRole('solicitante')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo usuarios con rol de solicitante pueden crear tickets'
+            ], 403);
+        }
+
+        // Verificar si el usuario puede crear un ticket (no debe tener encuestas pendientes)
+        if (!$user->canCreateTicket()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Debes completar las encuestas pendientes antes de crear un nuevo ticket',
+                'encuestas_pendientes' => true
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Crear el ticket
+            $ticket = Ticket::create([
+                'user_id' => $user->id,
+                'title' => $request->titulo,
+                'description' => $request->descripcion,
+                'status' => Ticket::STATUS_PENDIENTE,
+            ]);
+
+            // Procesar imágenes si las hay
+            $imagenesGuardadas = [];
+            if ($request->hasFile('imagenes')) {
+                $yearMonth = now()->format('Y/m');
+                foreach ($request->file('imagenes') as $image) {
+                    $path = $image->store('tickets/' . $yearMonth . '/' . $ticket->id . '/solicitud', 'public');
+                    
+                    $ticketImage = TicketImage::create([
+                        'ticket_id' => $ticket->id,
+                        'uploaded_by' => $user->id,
+                        'file_path' => $path,
+                        'original_name' => $image->getClientOriginalName(),
+                        'mime_type' => $image->getMimeType(),
+                        'file_size' => $image->getSize(),
+                        'type' => TicketImage::TYPE_SOLICITUD,
+                    ]);
+
+                    $imagenesGuardadas[] = [
+                        'id' => $ticketImage->id,
+                        'path' => $ticketImage->file_path
+                    ];
+                }
+            }
+
+            // Notificar a los administradores
+            try {
+                $admins = User::role('admin')->get();
+                if ($admins->count() > 0) {
+                    // Notificación en base de datos
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\TicketPendingApprovalNotification($ticket));
+                    
+                    // Notificación push FCM
+                    $fcmResult = $this->fcmService->notifyNewTicketToAdmins(
+                        $ticket->id,
+                        $ticket->title,
+                        $user->name
+                    );
+                    
+                    if ($fcmResult['success']) {
+                        Log::info('Notificación FCM enviada a ' . ($fcmResult['success_count'] ?? 0) . ' admins desde API móvil');
+                    }
+                    
+                    Log::info('Ticket #' . $ticket->id . ' creado desde API móvil por usuario #' . $user->id . '. Notificados ' . $admins->count() . ' admins.');
+                }
+            } catch (\Exception $e) {
+                // No fallar el proceso si las notificaciones fallan
+                Log::error('Error al enviar notificaciones de ticket creado desde API: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ticket creado exitosamente. Se ha notificado al equipo de almacén.',
+                'data' => [
+                    'ticket' => [
+                        'id' => $ticket->id,
+                        'codigo' => $ticket->formatted_code,
+                        'titulo' => $ticket->title,
+                        'descripcion' => $ticket->description,
+                        'status' => $ticket->status,
+                        'status_texto' => $ticket->getStatusText(),
+                        'created_at' => $ticket->created_at->format('Y-m-d H:i:s'),
+                        'solicitante' => [
+                            'id' => $user->id,
+                            'nombre' => $user->name,
+                            'email' => $user->email,
+                        ],
+                        'imagenes' => $imagenesGuardadas
+                    ]
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al crear el ticket: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

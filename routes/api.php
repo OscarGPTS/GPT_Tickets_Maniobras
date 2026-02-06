@@ -31,4 +31,7 @@ Route::prefix('mobile')->group(function () {
     // Obtener tickets finalizados según rol del usuario
     Route::post('/tickets/completed', [MobileController::class, 'getCompletedTickets']);
     
+    // Crear nuevo ticket (Solicitante)
+    Route::post('/tickets/create', [MobileController::class, 'createTicket']);
+    
 });
