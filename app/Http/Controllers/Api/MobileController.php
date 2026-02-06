@@ -140,6 +140,7 @@ class MobileController extends Controller
         // Validar datos
         $validator = Validator::make($request->all(), [
             'ticket_id' => 'required|exists:tickets,id',
+            'user_id' => 'required|exists:users,id',
             'descripcion' => 'required|string',
             'imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
@@ -162,6 +163,24 @@ class MobileController extends Controller
             ], 404);
         }
 
+        // Buscar usuario que está completando el ticket
+        $almacenUser = User::find($request->user_id);
+
+        if (!$almacenUser) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ], 404);
+        }
+
+        // Verificar que el usuario tenga rol de almacén o admin
+        if (!$almacenUser->hasRole('almacen') && !$almacenUser->hasRole('admin')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo usuarios de almacén o administradores pueden completar tickets'
+            ], 403);
+        }
+
         // Verificar que el ticket esté en proceso
         if (!$ticket->isEnProceso()) {
             return response()->json([
@@ -180,6 +199,12 @@ class MobileController extends Controller
 
         DB::beginTransaction();
         try {
+            // Si el ticket no está asignado o está asignado a otro usuario, reasignar al usuario actual
+            if ($ticket->assigned_to !== $almacenUser->id) {
+                $ticket->assignTo($almacenUser);
+                Log::info("Ticket #{$ticket->id} reasignado automáticamente al usuario #{$almacenUser->id} al completar");
+            }
+
             // Actualizar ticket
             $ticket->update([
                 'work_evidence' => $request->descripcion,
@@ -195,7 +220,7 @@ class MobileController extends Controller
                 
                 TicketImage::create([
                     'ticket_id' => $ticket->id,
-                    'uploaded_by' => $ticket->assigned_to,
+                    'uploaded_by' => $almacenUser->id,
                     'file_path' => $path,
                     'original_name' => $image->getClientOriginalName(),
                     'mime_type' => $image->getMimeType(),
