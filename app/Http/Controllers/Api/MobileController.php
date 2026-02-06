@@ -419,7 +419,7 @@ class MobileController extends Controller
     }
 
     /**
-     * Obtener tickets finalizados según el rol del usuario
+     * Obtener tickets finalizados según el rol del usuario (paginado y filtrado por mes/año)
      * POST /api/mobile/tickets/completed
      * 
      * @param Request $request
@@ -427,15 +427,19 @@ class MobileController extends Controller
      */
     public function getCompletedTickets(Request $request)
     {
-        // Validar user_id
+        // Validar datos de entrada
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id'
+            'user_id' => 'required|exists:users,id',
+            'mes' => 'nullable|integer|min:1|max:12',
+            'anio' => 'nullable|integer|min:2020|max:2100',
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:5|max:100',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Usuario inválido',
+                'message' => 'Datos inválidos',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -450,8 +454,15 @@ class MobileController extends Controller
             ], 404);
         }
 
+        // Determinar mes y año (si no se proporciona, usar actual)
+        $mes = $request->mes ?? now()->month;
+        $anio = $request->anio ?? now()->year;
+        $perPage = $request->per_page ?? 15;
+
         // Construir query base: solo tickets finalizados
         $query = Ticket::where('status', Ticket::STATUS_FINALIZADO)
+            ->whereMonth('completed_at', $mes)
+            ->whereYear('completed_at', $anio)
             ->with([
                 'user:id,name,email',
                 'assignedTo:id,name,email',
@@ -477,10 +488,10 @@ class MobileController extends Controller
             ], 403);
         }
 
-        // Obtener tickets ordenados por fecha de finalización (más recientes primero)
+        // Obtener tickets paginados ordenados por fecha de finalización (más recientes primero)
         $tickets = $query->orderBy('completed_at', 'desc')
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate($perPage);
 
         // Formatear tickets para la respuesta
         $formattedTickets = $tickets->map(function ($ticket) {
@@ -527,6 +538,10 @@ class MobileController extends Controller
             ];
         });
 
+        // Calcular estadísticas del mes actual (sin paginación)
+        $queryStats = clone $query;
+        $allTicketsOfMonth = $queryStats->get();
+
         // Obtener información básica del usuario
         $userInfo = [
             'id' => $user->id,
@@ -540,17 +555,31 @@ class MobileController extends Controller
             'message' => 'Tickets finalizados obtenidos correctamente',
             'data' => [
                 'usuario' => $userInfo,
+                'filtro' => [
+                    'mes' => $mes,
+                    'anio' => $anio,
+                    'mes_nombre' => \Carbon\Carbon::create($anio, $mes)->locale('es')->translatedFormat('F Y'),
+                ],
                 'tickets' => $formattedTickets,
+                'paginacion' => [
+                    'total' => $tickets->total(),
+                    'por_pagina' => $tickets->perPage(),
+                    'pagina_actual' => $tickets->currentPage(),
+                    'ultima_pagina' => $tickets->lastPage(),
+                    'desde' => $tickets->firstItem(),
+                    'hasta' => $tickets->lastItem(),
+                    'tiene_mas_paginas' => $tickets->hasMorePages(),
+                ],
                 'estadisticas' => [
-                    'total_finalizados' => $tickets->count(),
-                    'con_encuesta_completada' => $tickets->filter(function ($ticket) {
+                    'total_finalizados' => $allTicketsOfMonth->count(),
+                    'con_encuesta_completada' => $allTicketsOfMonth->filter(function ($ticket) {
                         return $ticket->survey && $ticket->survey->completed_at;
                     })->count(),
-                    'promedio_calificacion' => $tickets->filter(function ($ticket) {
+                    'promedio_calificacion' => round($allTicketsOfMonth->filter(function ($ticket) {
                         return $ticket->survey && $ticket->survey->completed_at && $ticket->survey->rating > 0;
                     })->avg(function ($ticket) {
                         return $ticket->survey->rating;
-                    }) ?? 0,
+                    }) ?? 0, 1),
                 ]
             ]
         ], 200);
