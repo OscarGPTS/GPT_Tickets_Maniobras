@@ -181,14 +181,6 @@ class MobileController extends Controller
             ], 403);
         }
 
-        // Verificar que el ticket esté en proceso
-        if (!$ticket->isEnProceso()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Solo se pueden completar tickets que estén en proceso'
-            ], 400);
-        }
-
         // Verificar que no esté cancelado
         if ($ticket->status === 'cancelado') {
             return response()->json([
