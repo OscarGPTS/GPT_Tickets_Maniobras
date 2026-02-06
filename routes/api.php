@@ -28,4 +28,7 @@ Route::prefix('mobile')->group(function () {
     // Asignar ticket a usuario de almacén
     Route::post('/tickets/assign', [MobileController::class, 'assignTicket']);
     
+    // Obtener tickets finalizados según rol del usuario
+    Route::post('/tickets/completed', [MobileController::class, 'getCompletedTickets']);
+    
 });

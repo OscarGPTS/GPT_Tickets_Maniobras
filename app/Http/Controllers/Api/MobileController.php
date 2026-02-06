@@ -417,4 +417,142 @@ class MobileController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener tickets finalizados según el rol del usuario
+     * POST /api/mobile/tickets/completed
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCompletedTickets(Request $request)
+    {
+        // Validar user_id
+        $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario inválido',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Buscar usuario
+        $user = User::find($request->user_id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado en el sistema'
+            ], 404);
+        }
+
+        // Construir query base: solo tickets finalizados
+        $query = Ticket::where('status', Ticket::STATUS_FINALIZADO)
+            ->with([
+                'user:id,name,email',
+                'assignedTo:id,name,email',
+                'solicitudImages:id,ticket_id,file_path',
+                'evidenciaImages:id,ticket_id,file_path',
+                'survey'
+            ]);
+
+        // Filtrar según el rol del usuario
+        if ($user->hasRole('admin')) {
+            // Admin: ver TODAS las solicitudes finalizadas
+            // No se aplica filtro adicional
+        } elseif ($user->hasRole('almacen')) {
+            // Almacén: solo tickets asignados a él
+            $query->where('assigned_to', $user->id);
+        } elseif ($user->hasRole('solicitante')) {
+            // Solicitante: solo tickets creados por él
+            $query->where('user_id', $user->id);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'El usuario no tiene un rol válido asignado'
+            ], 403);
+        }
+
+        // Obtener tickets ordenados por fecha de finalización (más recientes primero)
+        $tickets = $query->orderBy('completed_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Formatear tickets para la respuesta
+        $formattedTickets = $tickets->map(function ($ticket) {
+            return [
+                'id' => $ticket->id,
+                'codigo' => $ticket->formatted_code,
+                'titulo' => $ticket->title,
+                'descripcion' => $ticket->description,
+                'status' => $ticket->status,
+                'status_texto' => $ticket->getStatusText(),
+                'work_evidence' => $ticket->work_evidence,
+                'created_at' => $ticket->created_at->format('Y-m-d H:i:s'),
+                'assigned_at' => $ticket->assigned_at?->format('Y-m-d H:i:s'),
+                'completed_at' => $ticket->completed_at?->format('Y-m-d H:i:s'),
+                'solicitante' => [
+                    'id' => $ticket->user->id,
+                    'nombre' => $ticket->user->name,
+                    'email' => $ticket->user->email,
+                ],
+                'asignado_a' => $ticket->assignedTo ? [
+                    'id' => $ticket->assignedTo->id,
+                    'nombre' => $ticket->assignedTo->name,
+                    'email' => $ticket->assignedTo->email,
+                ] : null,
+                'imagenes_solicitud' => $ticket->solicitudImages->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'path' => $image->file_path
+                    ];
+                }),
+                'imagenes_evidencia' => $ticket->evidenciaImages->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'path' => $image->file_path
+                    ];
+                }),
+                'encuesta' => $ticket->survey ? [
+                    'id' => $ticket->survey->id,
+                    'rating' => $ticket->survey->rating,
+                    'comentarios' => $ticket->survey->comments,
+                    'completada' => $ticket->survey->completed_at ? true : false,
+                    'completed_at' => $ticket->survey->completed_at?->format('Y-m-d H:i:s'),
+                ] : null,
+            ];
+        });
+
+        // Obtener información básica del usuario
+        $userInfo = [
+            'id' => $user->id,
+            'nombre' => $user->name,
+            'email' => $user->email,
+            'rol' => $user->getRoleNames()->first(),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tickets finalizados obtenidos correctamente',
+            'data' => [
+                'usuario' => $userInfo,
+                'tickets' => $formattedTickets,
+                'estadisticas' => [
+                    'total_finalizados' => $tickets->count(),
+                    'con_encuesta_completada' => $tickets->filter(function ($ticket) {
+                        return $ticket->survey && $ticket->survey->completed_at;
+                    })->count(),
+                    'promedio_calificacion' => $tickets->filter(function ($ticket) {
+                        return $ticket->survey && $ticket->survey->completed_at && $ticket->survey->rating > 0;
+                    })->avg(function ($ticket) {
+                        return $ticket->survey->rating;
+                    }) ?? 0,
+                ]
+            ]
+        ], 200);
+    }
 }
