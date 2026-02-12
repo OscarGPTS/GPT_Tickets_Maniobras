@@ -881,7 +881,7 @@ class MobileController extends Controller
                 'data' => [
                     'completed_at' => $survey->completed_at->format('Y-m-d H:i:s'),
                     'rating' => $survey->rating,
-                    'comments' => $survey->feedback,
+                    'comments' => $survey->comments,
                 ]
             ], 400);
         }
@@ -891,7 +891,7 @@ class MobileController extends Controller
             // Actualizar encuesta
             $survey->update([
                 'rating' => $request->rating,
-                'feedback' => $request->comments,
+                'comments' => $request->comments,
                 'completed_at' => now(),
             ]);
 
@@ -921,7 +921,7 @@ class MobileController extends Controller
                         'ticket_id' => $ticket->id,
                         'ticket_codigo' => $ticket->formatted_code,
                         'rating' => $survey->rating,
-                        'comments' => $survey->feedback,
+                        'comments' => $survey->comments,
                         'completed_at' => $survey->completed_at->format('Y-m-d H:i:s'),
                     ]
                 ]

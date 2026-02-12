@@ -18,7 +18,7 @@ class Survey extends Model
         'ticket_id',
         'user_id',
         'rating',
-        'feedback',
+        'comments',
         'completed_at',
     ];
 
