@@ -34,4 +34,7 @@ Route::prefix('mobile')->group(function () {
     // Crear nuevo ticket (Solicitante)
     Route::post('/tickets/create', [MobileController::class, 'createTicket']);
     
+    // Completar encuesta/calificación de ticket
+    Route::post('/surveys/complete', [MobileController::class, 'completeSurvey']);
+    
 });

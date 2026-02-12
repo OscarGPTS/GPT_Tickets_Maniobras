@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class MobileController extends Controller
 {
@@ -58,17 +59,58 @@ class MobileController extends Controller
             ], 404);
         }
 
+        // Construir query base
+        $query = Ticket::query();
 
-        // Obtener tickets asignados al usuario (en_proceso y pendientes)
-        $tickets = Ticket::whereIn('status', [Ticket::STATUS_EN_PROCESO, Ticket::STATUS_PENDIENTE])
-            ->with(['user:id,name,email', 'assignedTo:id,name,email', 'solicitudImages:id,ticket_id,file_path', 'evidenciaImages:id,ticket_id,file_path'])
-            ->orderByRaw("CASE WHEN status = 'en_proceso' THEN 0 ELSE 1 END")
+        // Si es solicitante, incluir tickets finalizados sin calificar
+        if ($user->hasRole('solicitante')) {
+            $query->where(function($q) use ($user) {
+                // Tickets en proceso o pendientes creados por el solicitante
+                $q->where('user_id', $user->id)
+                  ->whereIn('status', [Ticket::STATUS_EN_PROCESO, Ticket::STATUS_PENDIENTE])
+                  // O tickets finalizados sin encuesta completada
+                  ->orWhere(function($subQuery) use ($user) {
+                      $subQuery->where('user_id', $user->id)
+                               ->where('status', Ticket::STATUS_FINALIZADO)
+                               ->where(function($surveyQuery) {
+                                   // No tiene encuesta O tiene encuesta sin completar
+                                   $surveyQuery->whereDoesntHave('survey')
+                                              ->orWhereHas('survey', function($s) {
+                                                  $s->whereNull('completed_at');
+                                              });
+                               });
+                  });
+            });
+        } else {
+            // Para almacén y admin: solo tickets en proceso y pendientes
+            $query->whereIn('status', [Ticket::STATUS_EN_PROCESO, Ticket::STATUS_PENDIENTE]);
+        }
+
+        // Obtener tickets con relaciones
+        $tickets = $query->with([
+                'user:id,name,email', 
+                'assignedTo:id,name,email', 
+                'solicitudImages:id,ticket_id,file_path', 
+                'evidenciaImages:id,ticket_id,file_path',
+                'survey'
+            ])
+            ->orderByRaw("CASE 
+                WHEN status = 'en_proceso' THEN 0 
+                WHEN status = 'pendiente' THEN 1 
+                WHEN status = 'finalizado' THEN 2 
+                ELSE 3 END")
             ->orderBy('assigned_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
 
         // Formatear tickets para la respuesta
         $formattedTickets = $tickets->map(function ($ticket) {
+            // Determinar si el ticket está calificado
+            $calificado = false;
+            if ($ticket->status === Ticket::STATUS_FINALIZADO) {
+                $calificado = $ticket->survey && $ticket->survey->completed_at !== null;
+            }
+
             return [
                 'id' => $ticket->id,
                 'codigo' => $ticket->formatted_code,
@@ -76,6 +118,7 @@ class MobileController extends Controller
                 'descripcion' => $ticket->description,
                 'status' => $ticket->status,
                 'status_texto' => $ticket->getStatusText(),
+                'calificado' => $calificado,
                 'work_evidence' => $ticket->work_evidence,
                 'created_at' => $ticket->created_at->format('Y-m-d H:i:s'),
                 'assigned_at' => $ticket->assigned_at?->format('Y-m-d H:i:s'),
@@ -122,7 +165,10 @@ class MobileController extends Controller
                 'estadisticas' => [
                     'total' => $tickets->count(),
                     'en_proceso' => $tickets->where('status', Ticket::STATUS_EN_PROCESO)->count(),
-                    'pendientes' => $tickets->where('status', Ticket::STATUS_PENDIENTE)->count()
+                    'pendientes' => $tickets->where('status', Ticket::STATUS_PENDIENTE)->count(),
+                    'finalizados_sin_calificar' => $tickets->where('status', Ticket::STATUS_FINALIZADO)->filter(function($ticket) {
+                        return !$ticket->survey || $ticket->survey->completed_at === null;
+                    })->count()
                 ]
             ]
         ], 200);
@@ -550,7 +596,7 @@ class MobileController extends Controller
                     'rating' => $ticket->survey->rating,
                     'comentarios' => $ticket->survey->comments,
                     'completada' => $ticket->survey->completed_at ? true : false,
-                    'completed_at' => $ticket->survey->completed_at?->format('Y-m-d H:i:s'),
+                    'completed_at' => $ticket->survey->completed_at?->format('Y-m-d H:i:s') ?? null,
                 ] : null,
             ];
         });
@@ -744,6 +790,149 @@ class MobileController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear el ticket: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Completar encuesta/calificación de ticket finalizado
+     * POST /api/mobile/surveys/complete
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function completeSurvey(Request $request)
+    {
+        // Validar datos
+        $validator = Validator::make($request->all(), [
+            'ticket_id' => 'required|exists:tickets,id',
+            'user_id' => 'required|exists:users,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'comments' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Buscar usuario
+        $user = User::find($request->user_id);
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Usuario no encontrado'
+            ], 404);
+        }
+
+        // Verificar que el usuario tenga rol de solicitante
+        if (!$user->hasRole('solicitante')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo usuarios con rol de solicitante pueden calificar tickets'
+            ], 403);
+        }
+
+        // Buscar ticket
+        $ticket = Ticket::with(['user', 'assignedTo', 'survey'])->find($request->ticket_id);
+
+        if (!$ticket) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ticket no encontrado'
+            ], 404);
+        }
+
+        // Verificar que el ticket pertenezca al usuario
+        if ($ticket->user_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Este ticket no te pertenece'
+            ], 403);
+        }
+
+        // Verificar que el ticket esté finalizado
+        if ($ticket->status !== Ticket::STATUS_FINALIZADO) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Solo puedes calificar tickets finalizados'
+            ], 400);
+        }
+
+        // Verificar si existe encuesta para este ticket
+        $survey = $ticket->survey;
+
+        if (!$survey) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No existe encuesta para este ticket'
+            ], 404);
+        }
+
+        // Verificar si la encuesta ya fue completada
+        if ($survey->completed_at) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta encuesta ya ha sido completada',
+                'data' => [
+                    'completed_at' => $survey->completed_at->format('Y-m-d H:i:s'),
+                    'rating' => $survey->rating,
+                    'comments' => $survey->feedback,
+                ]
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Actualizar encuesta
+            $survey->update([
+                'rating' => $request->rating,
+                'feedback' => $request->comments,
+                'completed_at' => now(),
+            ]);
+
+            // Notificar a los administradores
+            try {
+                $admins = User::role('admin')->get();
+                if ($admins->count() > 0) {
+                    \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SurveyCompletedNotification($survey));
+                    Log::info('Notificación de encuesta completada desde API móvil enviada a ' . $admins->count() . ' admins para ticket #' . $ticket->id);
+                }
+            } catch (\Exception $e) {
+                // No fallar el proceso si las notificaciones fallan
+                Log::error('Error al enviar notificación de encuesta completada desde API: ' . $e->getMessage());
+            }
+
+            DB::commit();
+
+            // Refrescar el modelo para obtener los valores actualizados
+            $survey->refresh();
+
+            return response()->json([
+                'success' => true,
+                'message' => '¡Gracias por tu calificación! Tu feedback es muy importante para nosotros.',
+                'data' => [
+                    'encuesta' => [
+                        'id' => $survey->id,
+                        'ticket_id' => $ticket->id,
+                        'ticket_codigo' => $ticket->formatted_code,
+                        'rating' => $survey->rating,
+                        'comments' => $survey->feedback,
+                        'completed_at' => $survey->completed_at->format('Y-m-d H:i:s'),
+                    ]
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al completar la encuesta: ' . $e->getMessage()
             ], 500);
         }
     }
