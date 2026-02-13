@@ -27,6 +27,114 @@ class MobileController extends Controller
     {
         $this->fcmService = $fcmService;
     }
+
+    /**
+     * Login o registro de usuario con Firebase
+     * POST /api/mobile/auth/login
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function loginOrRegister(Request $request)
+    {
+        // Validar datos
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'name' => 'required|string|max:255',
+            'firebase_uid' => 'nullable|string',
+            'avatar' => 'nullable|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Datos inválidos',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Buscar usuario por email
+            $user = User::where('email', $request->email)->first();
+
+            if (!$user) {
+                // Crear nuevo usuario
+                $user = User::create([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'provider_id' => $request->firebase_uid,
+                    'avatar' => $request->avatar,
+                    'provider' => 'firebase',
+                    'email_verified_at' => now(),
+                    'last_login_at' => now(),
+                ]);
+
+                // Asignar rol de solicitante por defecto
+                $user->assignRole('solicitante');
+
+                Log::info("Nuevo usuario creado desde Firebase: {$user->email} (ID: {$user->id})");
+            } else {
+                // Actualizar información del usuario existente
+                $updateData = [
+                    'last_login_at' => now(),
+                ];
+
+                // Actualizar nombre si cambió
+                if ($user->name !== $request->name) {
+                    $updateData['name'] = $request->name;
+                }
+
+                // Actualizar avatar si viene en la solicitud
+                if ($request->has('avatar') && $request->avatar) {
+                    $updateData['avatar'] = $request->avatar;
+                }
+
+                // Actualizar provider_id si viene en la solicitud y no existe
+                if ($request->has('firebase_uid') && !$user->provider_id) {
+                    $updateData['provider_id'] = $request->firebase_uid;
+                }
+
+                $user->update($updateData);
+
+                Log::info("Usuario existente inició sesión: {$user->email} (ID: {$user->id})");
+            }
+
+            DB::commit();
+
+            // Obtener información del usuario con roles
+            $userInfo = [
+                'id' => $user->id,
+                'nombre' => $user->name,
+                'email' => $user->email,
+                'avatar' => $user->avatar,
+                'rol' => $user->getRoleNames()->first(),
+                'roles' => $user->getRoleNames(),
+                'last_login_at' => $user->last_login_at?->format('Y-m-d H:i:s'),
+            ];
+
+            return response()->json([
+                'success' => true,
+                'message' => $user->wasRecentlyCreated ? 'Usuario registrado exitosamente' : 'Inicio de sesión exitoso',
+                'data' => [
+                    'usuario' => $userInfo,
+                    'es_nuevo' => $user->wasRecentlyCreated,
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error en loginOrRegister: " . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar la solicitud',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Obtener tickets para usuarios de almacén
      * POST /api/mobile/tickets

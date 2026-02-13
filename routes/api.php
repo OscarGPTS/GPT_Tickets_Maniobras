@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 // Rutas para versión móvil
 Route::prefix('mobile')->group(function () {
     
+    // Autenticación con Firebase
+    Route::post('/auth/login', [MobileController::class, 'loginOrRegister']);
+    
     // Obtener tickets del usuario de almacén
     Route::post('/tickets', [MobileController::class, 'getTickets']);
     
