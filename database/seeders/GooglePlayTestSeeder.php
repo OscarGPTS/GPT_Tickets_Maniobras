@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Ticket;
+use App\Models\Survey;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -48,27 +49,39 @@ class GooglePlayTestSeeder extends Seeder
         $ticketsFinalizados = 0;
         
         // 1. Ticket pendiente - Mover tubería PVC
-        Ticket::create([
+        $ticket1 = Ticket::create([
             'user_id' => $testUser->id,
             'title' => 'Mover 25 tubos PVC de 3 metros',
             'description' => 'Solicito mover 25 tubos de PVC de 2 pulgadas (3 metros cada uno) desde el almacén principal hacia el área de construcción (Edificio B, piso 3). Peso aproximado 150 kg.',
             'status' => Ticket::STATUS_PENDIENTE,
             'created_at' => now()->subDays(2),
         ]);
+        Survey::create([
+            'ticket_id' => $ticket1->id,
+            'user_id' => $testUser->id,
+            'rating' => 0,
+            'comments' => null,
+        ]);
         $ticketsPendientes++;
 
         // 2. Ticket pendiente - Mover rollos de teflón
-        Ticket::create([
+        $ticket2 = Ticket::create([
             'user_id' => $testUser->id,
             'title' => 'Mover 3 cajas de cinta teflón',
             'description' => 'Trasladar 3 cajas (30 rollos por caja) de cinta de teflón desde área de recepción hacia rack B-22 del almacén. Las cajas llegaron hoy en la mañana.',
             'status' => Ticket::STATUS_PENDIENTE,
             'created_at' => now()->subHours(4),
         ]);
+        Survey::create([
+            'ticket_id' => $ticket2->id,
+            'user_id' => $testUser->id,
+            'rating' => 0,
+            'comments' => null,
+        ]);
         $ticketsPendientes++;
 
         // 3. Ticket en proceso - Mover válvulas
-        Ticket::create([
+        $ticket3 = Ticket::create([
             'user_id' => $testUser->id,
             'assigned_to' => $almacenUsers->random()->id,
             'title' => 'Trasladar 12 válvulas de paso',
@@ -77,10 +90,16 @@ class GooglePlayTestSeeder extends Seeder
             'assigned_at' => now()->subHours(6),
             'created_at' => now()->subHours(8),
         ]);
+        Survey::create([
+            'ticket_id' => $ticket3->id,
+            'user_id' => $testUser->id,
+            'rating' => 0,
+            'comments' => null,
+        ]);
         $ticketsEnProceso++;
 
         // 4. Ticket en proceso - Mover tubería galvanizada
-        Ticket::create([
+        $ticket4 = Ticket::create([
             'user_id' => $testUser->id,
             'assigned_to' => $almacenUsers->random()->id,
             'title' => 'Trasladar 15 tramos de tubería galvanizada',
@@ -89,10 +108,16 @@ class GooglePlayTestSeeder extends Seeder
             'assigned_at' => now()->subDays(1),
             'created_at' => now()->subDays(1)->subHours(2),
         ]);
+        Survey::create([
+            'ticket_id' => $ticket4->id,
+            'user_id' => $testUser->id,
+            'rating' => 0,
+            'comments' => null,
+        ]);
         $ticketsEnProceso++;
 
         // 5. Ticket finalizado - Mover conectores
-        Ticket::create([
+        $ticketFinalizado1 = Ticket::create([
             'user_id' => $testUser->id,
             'assigned_to' => $almacenUsers->random()->id,
             'title' => 'Trasladar caja de conectores',
@@ -103,10 +128,17 @@ class GooglePlayTestSeeder extends Seeder
             'completed_at' => now()->subDays(3),
             'created_at' => now()->subDays(5),
         ]);
+        // Crear encuesta pendiente para este ticket
+        Survey::create([
+            'ticket_id' => $ticketFinalizado1->id,
+            'user_id' => $testUser->id,
+            'rating' => 0,
+            'comments' => null,
+        ]);
         $ticketsFinalizados++;
 
         // 6. Ticket finalizado - Mover llaves
-        Ticket::create([
+        $ticketFinalizado2 = Ticket::create([
             'user_id' => $testUser->id,
             'assigned_to' => $almacenUsers->random()->id,
             'title' => 'Trasladar 8 llaves mezcladoras',
@@ -116,6 +148,13 @@ class GooglePlayTestSeeder extends Seeder
             'assigned_at' => now()->subDays(2),
             'completed_at' => now()->subDay(),
             'created_at' => now()->subDays(3),
+        ]);
+        // Crear encuesta pendiente para este ticket
+        Survey::create([
+            'ticket_id' => $ticketFinalizado2->id,
+            'user_id' => $testUser->id,
+            'rating' => 0,
+            'comments' => null,
         ]);
         $ticketsFinalizados++;
 
