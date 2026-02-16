@@ -40,7 +40,9 @@ class GooglePlayTestSeeder extends Seeder
 
         $this->command->info("✅ Se encontraron {$almacenUsers->count()} usuarios de almacén");
 
-        // Eliminar tickets anteriores del usuario de prueba (para evitar duplicados)
+        // Eliminar tickets y encuestas anteriores del usuario de prueba (para evitar duplicados)
+        $ticketIds = Ticket::where('user_id', $testUser->id)->pluck('id');
+        Survey::whereIn('ticket_id', $ticketIds)->delete();
         Ticket::where('user_id', $testUser->id)->delete();
 
         // Crear tickets de prueba en diferentes estados (2 de cada uno)
@@ -202,6 +204,7 @@ class GooglePlayTestSeeder extends Seeder
             'comments' => 'Buen trabajo, el material llegó en tiempo y forma.',
             'completed_at' => now()->subDays(4),
         ]);
+        $ticketsFinalizados++;
         $ticketsCalificados++;
 
         $totalTickets = $ticketsPendientes + $ticketsEnProceso + $ticketsFinalizados;
