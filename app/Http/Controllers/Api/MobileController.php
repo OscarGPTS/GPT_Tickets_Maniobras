@@ -801,13 +801,13 @@ class MobileController extends Controller
         }
 
         // Verificar si el usuario puede crear un ticket (no debe tener encuestas pendientes)
-        if (!$user->canCreateTicket()) {
+        /* if (!$user->canCreateTicket()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Debes completar las encuestas pendientes antes de crear un nuevo ticket',
                 'encuestas_pendientes' => true
             ], 400);
-        }
+        } */
 
         DB::beginTransaction();
         try {
