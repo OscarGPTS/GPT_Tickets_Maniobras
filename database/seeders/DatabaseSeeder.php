@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             // TestUsersSeeder::class,  // Usuarios de prueba deshabilitados
+            GooglePlayTestSeeder::class,  // Usuario de prueba para Google Play
         ]);
     }
 }
