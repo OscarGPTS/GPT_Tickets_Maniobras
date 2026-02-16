@@ -3,8 +3,19 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\SupportRequestController;
 use App\Http\Controllers\TestController;
 use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| Rutas Públicas
+|--------------------------------------------------------------------------
+*/
+
+// Formulario de Solicitud de Soporte (disponible sin autenticación)
+Route::get('/soporte', [SupportRequestController::class, 'create'])->name('support.create');
+Route::post('/soporte', [SupportRequestController::class, 'store'])->name('support.store');
 
 /*
 |--------------------------------------------------------------------------
