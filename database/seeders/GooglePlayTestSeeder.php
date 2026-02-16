@@ -47,6 +47,7 @@ class GooglePlayTestSeeder extends Seeder
         $ticketsPendientes = 0;
         $ticketsEnProceso = 0;
         $ticketsFinalizados = 0;
+        $ticketsCalificados = 0;
         
         // 1. Ticket pendiente - Mover tubería PVC
         $ticket1 = Ticket::create([
@@ -158,11 +159,56 @@ class GooglePlayTestSeeder extends Seeder
         ]);
         $ticketsFinalizados++;
 
+        // 7. Ticket finalizado CON calificación - Mover herramientas
+        $ticket7 = Ticket::create([
+            'user_id' => $testUser->id,
+            'assigned_to' => $almacenUsers->random()->id,
+            'title' => 'Trasladar juego de herramientas',
+            'description' => 'Mover juego completo de llaves mixtas (10 piezas) desde taller principal hacia área de mantenimiento Edificio A. Las herramientas están en caja metálica roja.',
+            'status' => Ticket::STATUS_FINALIZADO,
+            'work_evidence' => 'Herramientas trasladadas exitosamente. Juego completo entregado en taller de mantenimiento Edificio A. Se verificó inventario completo.',
+            'assigned_at' => now()->subDays(8),
+            'completed_at' => now()->subDays(7),
+            'created_at' => now()->subDays(9),
+        ]);
+        // Crear encuesta completada con calificación
+        Survey::create([
+            'ticket_id' => $ticket7->id,
+            'user_id' => $testUser->id,
+            'rating' => 5,
+            'comments' => 'Excelente servicio, muy rápido y eficiente. Las herramientas llegaron en perfecto estado.',
+            'completed_at' => now()->subDays(6),
+        ]);
+        $ticketsFinalizados++;
+        $ticketsCalificados++;
+
+        // 8. Ticket finalizado CON calificación - Mover material eléctrico
+        $ticket8 = Ticket::create([
+            'user_id' => $testUser->id,
+            'assigned_to' => $almacenUsers->random()->id,
+            'title' => 'Trasladar 5 rollos de cable eléctrico',
+            'description' => 'Mover 5 rollos de cable calibre 12 AWG desde almacén principal hacia bodega de proyectos, rack E-15. Peso total aprox. 60 kg.',
+            'status' => Ticket::STATUS_FINALIZADO,
+            'work_evidence' => 'Se trasladaron los 5 rollos de cable eléctrico a rack E-15. Material ubicado y protegido correctamente.',
+            'assigned_at' => now()->subDays(6),
+            'completed_at' => now()->subDays(5),
+            'created_at' => now()->subDays(7),
+        ]);
+        // Crear encuesta completada con calificación
+        Survey::create([
+            'ticket_id' => $ticket8->id,
+            'user_id' => $testUser->id,
+            'rating' => 4,
+            'comments' => 'Buen trabajo, el material llegó en tiempo y forma.',
+            'completed_at' => now()->subDays(4),
+        ]);
+        $ticketsCalificados++;
+
         $totalTickets = $ticketsPendientes + $ticketsEnProceso + $ticketsFinalizados;
         
         $this->command->info("✅ Se crearon {$totalTickets} tickets de prueba para google-test@gmail.com");
         $this->command->info("   - {$ticketsPendientes} tickets pendientes");
         $this->command->info("   - {$ticketsEnProceso} tickets en proceso");
-        $this->command->info("   - {$ticketsFinalizados} tickets finalizados sin calificar");
+        $this->command->info("   - {$ticketsFinalizados} tickets finalizados ({$ticketsCalificados} con calificación, " . ($ticketsFinalizados - $ticketsCalificados) . " sin calificar)");
     }
 }
