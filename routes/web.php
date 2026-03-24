@@ -63,6 +63,7 @@ require __DIR__.'/firebase.php';
 */
 
 Route::get('/test/pdf', [TestController::class, 'testPdf'])->name('test.pdf');
+Route::get('/test/email', [TestController::class, 'testEmail'])->name('test.email');
 
 /*
 |--------------------------------------------------------------------------
